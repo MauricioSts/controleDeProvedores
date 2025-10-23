@@ -33,9 +33,9 @@ const UnauthorizedAccess = ({ userEmail }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="text-3xl font-bold text-red-400 mb-4"
+          className="text-4xl font-bold text-red-500 mb-4"
         >
-          Acesso Restrito
+          🚫 Acesso Negado
         </motion.h1>
 
         {/* Mensagem Principal */}
