@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }) => {
         await signOut(auth);
         setUserEmail(email);
         setIsAuthorized(false);
-        toast.error('Seu email não está autorizado a acessar este sistema');
         return null;
       }
       

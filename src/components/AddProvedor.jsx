@@ -148,7 +148,6 @@ function AddProvedor({ handleAddProvedor }) {
             ["cnpj", "CNPJ", "text"],
             ["numeroFiscal", "Nº Fistel", "number"],
             ["numeroScm", "Nº SCM", "number"],
-            ["processoAnatel", "Processo Anatel", "text"],
           ].map(([campo, label, type], index) => (
             <motion.div 
               key={campo}
@@ -164,14 +163,12 @@ function AddProvedor({ handleAddProvedor }) {
                 value={campo === "razaoSocial" ? razaoSocial : 
                        campo === "cnpj" ? cnpj :
                        campo === "numeroFiscal" ? numeroFiscal :
-                       campo === "numeroScm" ? numeroScm :
-                       campo === "processoAnatel" ? processoAnatel : ""}
+                       campo === "numeroScm" ? numeroScm : ""}
                 onChange={(e) => {
                   if (campo === "razaoSocial") setRazaoSocial(e.target.value);
                   else if (campo === "cnpj") setCnpj(e.target.value);
                   else if (campo === "numeroFiscal") setNumeroFiscal(e.target.value);
                   else if (campo === "numeroScm") setNumeroScm(e.target.value);
-                  else if (campo === "processoAnatel") setProcessoAnatel(e.target.value);
                 }}
                 placeholder={`Digite ${label.toLowerCase()}`}
                 className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
@@ -298,6 +295,25 @@ function AddProvedor({ handleAddProvedor }) {
                   </select>
                 </motion.div>
               ))}
+              
+              {/* Campo de Processos Anatel */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 2.1 }}
+                className="col-span-full"
+              >
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Processos Anatel
+                </label>
+                <textarea
+                  value={processoAnatel}
+                  onChange={(e) => setProcessoAnatel(e.target.value)}
+                  placeholder="Digite os números dos processos Anatel (separados por vírgula ou quebra de linha)"
+                  rows="3"
+                  className="w-full border border-gray-600 bg-gray-900 text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500 transition"
+                />
+              </motion.div>
             </div>
           </motion.div>
 
