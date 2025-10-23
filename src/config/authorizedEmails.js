@@ -1,7 +1,8 @@
 // Lista de emails autorizados para acessar o sistema
 export const AUTHORIZED_EMAILS = [
   'mauriciogear4@gmail.com',
-  'contato.yanphelipe@gmail.com'
+  'contato.yanphelipe@gmail.com',
+  'contatomauriciosts@gmail.com'
 ];
 
 // Função para verificar se um email está autorizado
