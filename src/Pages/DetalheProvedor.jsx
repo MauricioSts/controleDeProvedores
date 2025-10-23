@@ -104,8 +104,8 @@ function DetalheProvedor() {
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
       pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
-      pdf.text('Responsável Técnico: Yan Phelipe Fernandes de Souza Rocha', 25, yPosition + 25);
-      pdf.text(`Processos CFT: ${provedor.processosCft || 'N/A'}`, 25, yPosition + 32);
+      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
+      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
       
       yPosition += 45;
       
