@@ -29,10 +29,10 @@ const DebugAuth = () => {
 
   return (
     <div className="fixed bottom-4 right-4 bg-gray-800 p-4 rounded-lg border border-gray-600 text-xs max-w-sm">
-      <h3 className="text-cyan-400 font-bold mb-2">🔧 Debug Auth</h3>
+      <h3 className="text-cyan-400 font-bold mb-2">Debug Auth</h3>
       <div className="space-y-1 text-gray-300">
-        <div>Auth: {debugInfo.authExists ? '✅' : '❌'}</div>
-        <div>Google Provider: {debugInfo.googleProviderExists ? '✅' : '❌'}</div>
+        <div>Auth: {debugInfo.authExists ? 'Sim' : 'Não'}</div>
+        <div>Google Provider: {debugInfo.googleProviderExists ? 'Sim' : 'Não'}</div>
         <div>App: {debugInfo.authApp}</div>
         <div>Time: {debugInfo.timestamp}</div>
       </div>

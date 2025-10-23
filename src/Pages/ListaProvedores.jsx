@@ -240,10 +240,10 @@ function ListaProvedores({ lista }) {
       }
 
       if (successCount > 0) {
-        toast.success(`✅ ${successCount} PDF(s) gerado(s) com sucesso!`);
+        toast.success(`${successCount} PDF(s) gerado(s) com sucesso!`);
       }
       if (errorCount > 0) {
-        toast.error(`❌ ${errorCount} PDF(s) falharam na geração`);
+        toast.error(`${errorCount} PDF(s) falharam na geração`);
       }
     } catch (error) {
       console.error('Erro geral na geração de PDFs:', error);
@@ -254,14 +254,14 @@ function ListaProvedores({ lista }) {
   };
 
   return (
-    // 🎨 Aplica o tema escuro ao container principal (mantido)
+    // Aplica o tema escuro ao container principal
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-gray-900 text-white p-6 sm:p-10"
     >
-      {/* 🚀 REMOVIDO: max-w-4xl. O container agora usa a largura total (full-width) da tela. */}
+      {/* REMOVIDO: max-w-4xl. O container agora usa a largura total (full-width) da tela. */}
       {/* O padding horizontal (px-0 sm:px-4) é ajustado para manter um pequeno respiro nas laterais */}
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
@@ -269,14 +269,45 @@ function ListaProvedores({ lista }) {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8"
       >
-        {/* Título Moderno (mantido) */}
+        {/* Título com animação de onda */}
         <motion.h2 
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+          initial={{ opacity: 0, scale: 0.8, rotateX: -15 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1, 
+            rotateX: 0,
+            transition: {
+              duration: 1.2,
+              delay: 0.4,
+              ease: "easeOut"
+            }
+          }}
           className="text-3xl sm:text-4xl font-extrabold mb-8 border-b-4 border-cyan-500 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
         >
-          📋 Lista de Provedores
+          {"Lista de Provedores".split("").map((letter, index) => (
+            <motion.span
+              key={index}
+              initial={{ opacity: 0, y: 30, rotateY: -90 }}
+              animate={{ 
+                opacity: 1, 
+                y: 0, 
+                rotateY: 0,
+                transition: {
+                  delay: 0.6 + (index * 0.08),
+                  duration: 0.6,
+                  ease: "easeOut"
+                }
+              }}
+              whileHover={{
+                y: -5,
+                scale: 1.1,
+                transition: { duration: 0.2 }
+              }}
+              className="inline-block cursor-default"
+            >
+              {letter === " " ? "\u00A0" : letter}
+            </motion.span>
+          ))}
         </motion.h2>
 
         {/* Input de Busca */}

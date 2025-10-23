@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AddProvedor from "./components/AddProvedor";
 import ListaProvedores from "./Pages/ListaProvedores";
-import DetalheProvedor from "./Pages/DetalheProvedor"; // 🔹 novo import
+import DetalheProvedor from "./Pages/DetalheProvedor";
 import Login from "./components/Login";
 import Loading from "./components/Loading";
 import UnauthorizedAccess from "./components/UnauthorizedAccess";
@@ -108,7 +108,7 @@ function AppContent() {
         },
         createdAt: serverTimestamp(),
       });
-      toast.success("✅ Provedor adicionado!");
+      toast.success("Provedor adicionado com sucesso!");
       setView("lista");
     } catch (err) {
       console.error(err);
@@ -153,22 +153,65 @@ function AppContent() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative z-10"
           >
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 mb-2"
+              className="flex items-center gap-4"
             >
-              📡 Gerenciador de Provedores
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="text-gray-300 text-sm font-medium"
-            >
-              Controle e gestão de provedores de internet
-            </motion.p>
+              <img 
+                src="/bbicon.png" 
+                alt="BridgeAndBits Icon" 
+                className="h-28 w-28"
+              />
+              <div className="flex flex-col">
+                <motion.h1 
+                  className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
+                  animate={{ 
+                    y: [0, -8, 0],
+                    transition: {
+                      delay: 1.2,
+                      duration: 0.6,
+                      ease: "easeOut"
+                    }
+                  }}
+                >
+                  {"BridgeAndBits".split("").map((letter, index) => (
+                    <motion.span
+                      key={index}
+                      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                      animate={{ 
+                        opacity: 1, 
+                        y: 0, 
+                        scale: 1,
+                        transition: {
+                          delay: index * 0.1,
+                          duration: 0.5,
+                          ease: "easeOut"
+                        }
+                      }}
+                      className="inline-block"
+                    >
+                      {letter === " " ? "\u00A0" : letter}
+                    </motion.span>
+                  ))}
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    transition: {
+                      delay: 1.5,
+                      duration: 0.6
+                    }
+                  }}
+                  className="text-xl text-gray-300 font-medium"
+                >
+                  Gerenciador de Provedores
+                </motion.p>
+              </div>
+            </motion.div>
           </motion.div>
           
           <motion.div
@@ -196,43 +239,75 @@ function AppContent() {
             </motion.div>
 
             {/* Botões de navegação */}
-            <div className="flex gap-2">
+            <div className="flex gap-4">
               <motion.button
                 whileHover={{ 
-                  scale: 1.05,
-                  y: -2,
-                  boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3)"
+                  scale: 1.02,
+                  y: -1,
+                  boxShadow: "0 8px 32px rgba(6, 182, 212, 0.4)"
                 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setView("add")}
-                className={`px-4 py-2 rounded-lg font-bold text-xs transition-all duration-300 ${
+                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${
                   view === "add"
-                    ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 border border-cyan-400/30"
-                    : "bg-gray-600/50 text-gray-300 hover:bg-gray-600 border border-gray-500/30 hover:border-cyan-400/50"
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-xl shadow-cyan-500/30 border border-cyan-400/40"
+                    : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-cyan-400/60 backdrop-blur-sm"
                 }`}
               >
-                <span className="flex items-center gap-1">
-                  <span className="text-sm">➕</span>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative z-10 flex items-center gap-3">
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-current"
+                    animate={{ 
+                      scale: view === "add" ? [1, 1.2, 1] : 1,
+                      opacity: view === "add" ? [0.8, 1, 0.8] : 0.6
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: view === "add" ? Infinity : 0
+                    }}
+                  />
                   <span className="hidden sm:inline">Adicionar</span>
                 </span>
               </motion.button>
               
               <motion.button
                 whileHover={{ 
-                  scale: 1.05,
-                  y: -2,
-                  boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3)"
+                  scale: 1.02,
+                  y: -1,
+                  boxShadow: "0 8px 32px rgba(6, 182, 212, 0.4)"
                 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setView("lista")}
-                className={`px-4 py-2 rounded-lg font-bold text-xs transition-all duration-300 ${
+                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${
                   view === "lista"
-                    ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 border border-cyan-400/30"
-                    : "bg-gray-600/50 text-gray-300 hover:bg-gray-600 border border-gray-500/30 hover:border-cyan-400/50"
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-xl shadow-cyan-500/30 border border-cyan-400/40"
+                    : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-cyan-400/60 backdrop-blur-sm"
                 }`}
               >
-                <span className="flex items-center gap-1">
-                  <span className="text-sm">📋</span>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative z-10 flex items-center gap-3">
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-current"
+                    animate={{ 
+                      scale: view === "lista" ? [1, 1.2, 1] : 1,
+                      opacity: view === "lista" ? [0.8, 1, 0.8] : 0.6
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: view === "lista" ? Infinity : 0
+                    }}
+                  />
                   <span className="hidden sm:inline">Lista</span>
                 </span>
               </motion.button>
@@ -240,18 +315,34 @@ function AppContent() {
               {/* Botão de logout */}
               <motion.button
                 whileHover={{ 
-                  scale: 1.05,
-                  y: -2,
-                  boxShadow: "0 10px 25px rgba(239, 68, 68, 0.3)"
+                  scale: 1.02,
+                  y: -1,
+                  boxShadow: "0 8px 32px rgba(239, 68, 68, 0.4)"
                 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={logout}
-                className="px-4 py-2 rounded-lg font-bold text-xs transition-all duration-300 
-                           bg-red-600/50 text-red-300 hover:bg-red-600 border border-red-500/30 
-                           hover:border-red-400/50"
+                className="relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden
+                           bg-red-700/60 text-red-200 hover:bg-red-600/80 border border-red-600/40 
+                           hover:border-red-400/60 backdrop-blur-sm"
               >
-                <span className="flex items-center gap-1">
-                  <span className="text-sm">🚪</span>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-red-500/20"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative z-10 flex items-center gap-3">
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-current"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      opacity: [0.6, 1, 0.6]
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity
+                    }}
+                  />
                   <span className="hidden sm:inline">Sair</span>
                 </span>
               </motion.button>

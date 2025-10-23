@@ -392,7 +392,7 @@ function DetalheProvedor() {
     return <p className="text-center mt-10 text-gray-300">Carregando...</p>;
 
   return (
-    // 🎨 Fundo Escuro
+    // Fundo Escuro
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -681,7 +681,7 @@ function DetalheProvedor() {
               disabled={loading}
               className="bg-cyan-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
-              {loading ? "Salvando..." : "💾 Salvar Alterações"}
+              {loading ? "Salvando..." : "Salvar Alterações"}
             </motion.button>
           ) : (
             <motion.button

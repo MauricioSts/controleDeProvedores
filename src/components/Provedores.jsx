@@ -10,12 +10,12 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
     const lowerStatus = status.toLowerCase();
 
     if (lowerStatus === "regular" || lowerStatus === "ativo") {
-      // 🔵 ATIVA / REGULAR: Azul/Cyan
+      // ATIVA / REGULAR: Azul/Cyan
       return returnColorBase ? "cyan" : "text-cyan-400 font-semibold";
     }
 
     if (lowerStatus === "irregular" || lowerStatus === "inativo") {
-      // 🔴 INATIVA / IRREGULAR: Vermelho
+      // INATIVA / IRREGULAR: Vermelho
       return returnColorBase ? "red" : "text-red-400 font-semibold";
     }
 
@@ -76,7 +76,7 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
               scale: 0.95,
               rotateY: -2
             }}
-            onClick={() => onCardClick && onCardClick(p.id)} // 🔹 clique no card
+            onClick={() => onCardClick && onCardClick(p.id)}
             className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-xl 
                        hover:shadow-cyan-500/30 hover:shadow-2xl transition-all duration-300 ease-in-out 
                        cursor-pointer relative"

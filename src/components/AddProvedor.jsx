@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // 🔹 import Firestore
-import { db } from "../firebase/config"; // 🔹 importa sua instância do Firebase
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase/config";
 import CouncilInfo from "./CouncilInfo";
 import LoadingDots from "./LoadingDots";
 
@@ -110,14 +110,14 @@ function AddProvedor({ handleAddProvedor }) {
     } catch (error) {
       console.error("Erro ao adicionar provedor:", error);
       // Mantendo o alert() conforme a lógica original
-      alert("❌ Erro ao adicionar provedor. Verifique o console.");
+      alert("Erro ao adicionar provedor. Verifique o console.");
     }
 
     setLoading(false);
   }
 
   return (
-    // 🎨 Fundo Escuro - seguindo o padrão do DetalheProvedor
+    // Fundo Escuro - seguindo o padrão do DetalheProvedor
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -357,7 +357,7 @@ function AddProvedor({ handleAddProvedor }) {
                 <span className="ml-2">Adicionando...</span>
               </div>
             ) : (
-              "💾 Adicionar Provedor"
+              "Adicionar Provedor"
             )}
           </motion.button>
         </motion.div>
