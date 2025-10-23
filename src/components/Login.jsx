@@ -58,126 +58,14 @@ const Login = () => {
         }}
       />
 
-      {/* Raios Coloridos - Passam ao fundo a cada 5 segundos */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Raio Cyan */}
-        <motion.div
-          className="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
-          style={{
-            top: '20%',
-            left: '-100%',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
-          }}
-          animate={{
-            x: ['-100%', '100%'],
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatDelay: 3,
-            ease: "easeInOut"
-          }}
-        />
-        
-        {/* Raio Blue */}
-        <motion.div
-          className="absolute w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
-          style={{
-            top: '40%',
-            left: '-100%',
-            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
-          }}
-          animate={{
-            x: ['-100%', '100%'],
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatDelay: 3,
-            delay: 1,
-            ease: "easeInOut"
-          }}
-        />
-        
-        {/* Raio Purple */}
-        <motion.div
-          className="absolute w-full h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent"
-          style={{
-            top: '60%',
-            left: '-100%',
-            boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
-          }}
-          animate={{
-            x: ['-100%', '100%'],
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatDelay: 3,
-            delay: 2,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* Raios Diagonais */}
-        <motion.div
-          className="absolute w-1 h-full bg-gradient-to-b from-transparent via-cyan-400 to-transparent"
-          style={{
-            top: '-100%',
-            left: '30%',
-            transform: 'rotate(15deg)',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
-          }}
-          animate={{
-            y: ['-100%', '100%'],
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            repeatDelay: 2.5,
-            delay: 0.5,
-            ease: "easeInOut"
-          }}
-        />
-        
-        <motion.div
-          className="absolute w-1 h-full bg-gradient-to-b from-transparent via-purple-400 to-transparent"
-          style={{
-            top: '-100%',
-            left: '70%',
-            transform: 'rotate(-15deg)',
-            boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
-          }}
-          animate={{
-            y: ['-100%', '100%'],
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            repeatDelay: 2.5,
-            delay: 1.5,
-            ease: "easeInOut"
-          }}
-        />
-      </motion.div>
 
       {/* Main Login Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="bg-gray-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full border border-gray-700/50 relative z-10"
-      >
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="bg-gray-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-lg w-full border border-gray-700/50 relative z-10 mx-auto"
+        >
         {/* Logo and Brand Section */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
@@ -231,7 +119,7 @@ const Login = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="text-2xl font-bold text-white mb-2"
+                className="text-lg font-medium text-gray-300 mb-2"
               >
                 Gerenciador de Provedores
               </motion.h2>
@@ -248,54 +136,165 @@ const Login = () => {
           </motion.div>
         </motion.div>
 
-        {/* Login Button */}
+        {/* Login Button - Super Motion */}
         <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.2 }}
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ 
+            duration: 0.8, 
+            delay: 1.2,
+            type: "spring",
+            stiffness: 100,
+            damping: 15
+          }}
           whileHover={{ 
             scale: 1.02,
-            boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3)"
+            y: -1,
+            boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)",
+            transition: { duration: 0.3, ease: "easeOut" }
           }}
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ 
+            scale: 0.95,
+            y: 0,
+            transition: { duration: 0.1 }
+          }}
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full bg-white text-gray-900 py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
+          className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl relative overflow-hidden group border border-gray-200/30"
         >
-          {/* Shimmer effect */}
+          {/* Background Gradient Animation */}
           <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            initial={{ x: "-100%" }}
-            whileHover={{ x: "100%" }}
-            transition={{ duration: 0.6 }}
+            className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
           />
           
-          <motion.svg 
-            className="w-6 h-6 relative z-10"
-            viewBox="0 0 24 24"
-            animate={{ rotate: loading ? 360 : 0 }}
-            transition={{ duration: 1, repeat: loading ? Infinity : 0, ease: "linear" }}
+          {/* Shimmer Effect */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            initial={{ x: "-100%", skewX: "-20deg" }}
+            whileHover={{ x: "100%" }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          />
+          
+          {/* Pulse Effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-2xl"
+            animate={{
+              scale: [1, 1.02, 1],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          {/* Google Icon with Advanced Animation */}
+          <motion.div
+            className="relative z-10"
+            animate={{ 
+              rotate: loading ? 360 : 0,
+              scale: loading ? [1, 1.1, 1] : 1
+            }}
+            transition={{ 
+              rotate: { duration: 1, repeat: loading ? Infinity : 0, ease: "linear" },
+              scale: { duration: 0.5, repeat: loading ? Infinity : 0 }
+            }}
           >
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            />
-          </motion.svg>
-          <motion.span className="relative z-10">
-            {loading ? "Entrando..." : "Entrar com Google"}
+            <motion.svg 
+              className="w-5 h-5"
+              viewBox="0 0 24 24"
+              whileHover={{ 
+                scale: 1.1,
+                rotate: [0, -5, 5, 0],
+                transition: { duration: 0.3 }
+              }}
+            >
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </motion.svg>
+          </motion.div>
+          
+          {/* Text with Typewriter Effect */}
+          <motion.span 
+            className="relative z-10 text-base font-medium"
+            animate={{
+              backgroundPosition: loading ? ["0% 50%", "100% 50%", "0% 50%"] : "0% 50%"
+            }}
+            transition={{
+              backgroundPosition: {
+                duration: 1.5,
+                repeat: loading ? Infinity : 0,
+                ease: "easeInOut"
+              }
+            }}
+          >
+            {loading ? (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2"
+              >
+                <motion.span
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                >
+                  Entrando
+                </motion.span>
+                <motion.div className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 h-1 bg-current rounded-full"
+                      animate={{
+                        scale: [0.5, 1, 0.5],
+                        opacity: [0.3, 1, 0.3]
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        delay: i * 0.2
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </motion.span>
+            ) : (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              >
+                Entrar com Google
+              </motion.span>
+            )}
           </motion.span>
+          
+          {/* Loading Spinner */}
+          {loading && (
+            <motion.div
+              className="absolute right-3 w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+          )}
         </motion.button>
 
         {/* Decorative Elements */}
@@ -337,15 +336,60 @@ const Login = () => {
         />
       </motion.div>
 
-      {/* Floating Particles - MUITO MAIS! */}
+      {/* Partículas Coloridas Explodindo */}
+      {[...Array(25)].map((_, i) => {
+        const centerX = 50; // Centro da tela
+        const centerY = 50;
+        const angle = (i / 25) * 360; // Distribui as partículas em círculo
+        const distance = 20 + Math.random() * 30; // Distância variável do centro
+        
+        return (
+          <motion.div
+            key={i}
+            className={`absolute rounded-full ${
+              i % 5 === 0 ? 'w-2 h-2 bg-cyan-400/60' :
+              i % 5 === 1 ? 'w-1.5 h-1.5 bg-blue-400/70' :
+              i % 5 === 2 ? 'w-3 h-3 bg-purple-400/50' :
+              i % 5 === 3 ? 'w-1 h-1 bg-pink-400/80' :
+              'w-2.5 h-2.5 bg-cyan-300/60'
+            }`}
+            style={{
+              left: `${centerX}%`,
+              top: `${centerY}%`,
+              transformOrigin: 'center'
+            }}
+            initial={{
+              x: 0,
+              y: 0,
+              scale: 0,
+              opacity: 0
+            }}
+            animate={{
+              x: [0, Math.cos(angle * Math.PI / 180) * distance, Math.cos(angle * Math.PI / 180) * (distance + 20)],
+              y: [0, Math.sin(angle * Math.PI / 180) * distance, Math.sin(angle * Math.PI / 180) * (distance + 20)],
+              scale: [0, 1, 0.3],
+              opacity: [0, 1, 0],
+              rotate: [0, 360, 720]
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: Math.random() * 3
+            }}
+          />
+        );
+      })}
+
+      {/* Partículas Suaves Flutuantes */}
       {[...Array(20)].map((_, i) => (
         <motion.div
-          key={i}
+          key={`float-${i}`}
           className={`absolute rounded-full ${
-            i % 4 === 0 ? 'w-2 h-2 bg-cyan-400/30' :
-            i % 4 === 1 ? 'w-1.5 h-1.5 bg-blue-400/40' :
-            i % 4 === 2 ? 'w-3 h-3 bg-purple-400/20' :
-            'w-1 h-1 bg-cyan-300/50'
+            i % 4 === 0 ? 'w-1 h-1 bg-cyan-300/30' :
+            i % 4 === 1 ? 'w-1.5 h-1.5 bg-blue-300/40' :
+            i % 4 === 2 ? 'w-2 h-2 bg-purple-300/25' :
+            'w-0.5 h-0.5 bg-pink-300/50'
           }`}
           style={{
             left: `${Math.random() * 100}%`,
@@ -355,41 +399,70 @@ const Login = () => {
             y: [-30, 30, -30],
             x: [-20, 20, -20],
             opacity: [0.2, 0.8, 0.2],
-            scale: [0.5, 1.5, 0.5],
-            rotate: [0, 360, 0]
+            scale: [0.5, 1.2, 0.5]
           }}
           transition={{
-            duration: 4 + Math.random() * 4,
+            duration: 5 + Math.random() * 3,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: Math.random() * 2
+            delay: Math.random() * 4
           }}
         />
       ))}
 
-      {/* Additional Background Particles */}
-      {[...Array(15)].map((_, i) => (
-        <motion.div
-          key={`bg-${i}`}
-          className="absolute w-1 h-1 bg-white/20 rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`
-          }}
-          animate={{
-            y: [-50, 50, -50],
-            x: [-30, 30, -30],
-            opacity: [0.1, 0.6, 0.1],
-            scale: [0.3, 1.2, 0.3]
-          }}
-          transition={{
-            duration: 6 + Math.random() * 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: Math.random() * 3
-          }}
-        />
-      ))}
+      {/* Explosões Suaves */}
+      {[...Array(8)].map((_, i) => {
+        const explosionCenterX = 20 + Math.random() * 60;
+        const explosionCenterY = 20 + Math.random() * 60;
+        
+        return (
+          <motion.div
+            key={`explosion-${i}`}
+            className="absolute"
+            style={{
+              left: `${explosionCenterX}%`,
+              top: `${explosionCenterY}%`
+            }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{
+              scale: [0, 1, 0],
+              opacity: [0, 0.6, 0]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: i * 0.8,
+              ease: "easeOut"
+            }}
+          >
+            {[...Array(6)].map((_, j) => {
+              const angle = (j / 6) * 360;
+              const distance = 15 + Math.random() * 10;
+              
+              return (
+                <motion.div
+                  key={j}
+                  className="absolute w-1 h-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full"
+                  style={{
+                    transformOrigin: 'center'
+                  }}
+                  animate={{
+                    x: [0, Math.cos(angle * Math.PI / 180) * distance, Math.cos(angle * Math.PI / 180) * (distance + 15)],
+                    y: [0, Math.sin(angle * Math.PI / 180) * distance, Math.sin(angle * Math.PI / 180) * (distance + 15)],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    delay: 0.1 * j,
+                    ease: "easeOut"
+                  }}
+                />
+              );
+            })}
+          </motion.div>
+        );
+      })}
 
       {/* Large Floating Orbs */}
       {[...Array(8)].map((_, i) => (

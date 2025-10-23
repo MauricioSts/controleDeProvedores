@@ -138,7 +138,7 @@ function AppContent() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative overflow-hidden bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 p-6 shadow-2xl flex justify-between items-center mb-8 rounded-2xl border border-gray-600/30"
+          className="relative overflow-hidden bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 p-6 shadow-2xl flex justify-center items-center mb-8 rounded-2xl border border-gray-600/30"
         >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5"></div>
@@ -147,79 +147,88 @@ function AppContent() {
           {/* Glow Effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10 blur-xl"></div>
           
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative z-10"
-          >
+          <div className="flex justify-between items-center w-full">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative z-10"
             >
-              <img 
-                src="/bbicon.png" 
-                alt="BridgeAndBits Icon" 
-                className="h-28 w-28"
-              />
-              <div className="flex flex-col">
-                <motion.h1 
-                  className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
-                  animate={{ 
-                    y: [0, -8, 0],
-                    transition: {
-                      delay: 1.2,
-                      duration: 0.6,
-                      ease: "easeOut"
-                    }
-                  }}
-                >
-                  {"BridgeAndBits".split("").map((letter, index) => (
-                    <motion.span
-                      key={index}
-                      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                      animate={{ 
-                        opacity: 1, 
-                        y: 0, 
-                        scale: 1,
-                        transition: {
-                          delay: index * 0.1,
-                          duration: 0.5,
-                          ease: "easeOut"
-                        }
-                      }}
-                      className="inline-block"
-                    >
-                      {letter === " " ? "\u00A0" : letter}
-                    </motion.span>
-                  ))}
-                </motion.h1>
-                <motion.p 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0,
-                    transition: {
-                      delay: 1.5,
-                      duration: 0.6
-                    }
-                  }}
-                  className="text-xl text-gray-300 font-medium"
-                >
-                  Gerenciador de Provedores
-                </motion.p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="flex items-center gap-4"
+              >
+                <img 
+                  src="/bbicon.png" 
+                  alt="BridgeAndBits Icon" 
+                  className="h-16 w-16"
+                />
+                <div className="flex flex-col">
+                  <motion.h1 
+                    className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
+                    animate={{ 
+                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                      y: [0, -8, 0]
+                    }}
+                    transition={{
+                      backgroundPosition: {
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      },
+                      y: {
+                        delay: 1.2,
+                        duration: 0.6,
+                        ease: "easeOut"
+                      }
+                    }}
+                  >
+                    {"BridgeAndBits".split("").map((letter, index) => (
+                      <motion.span
+                        key={index}
+                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                        animate={{ 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: 1,
+                          transition: {
+                            delay: index * 0.1,
+                            duration: 0.5,
+                            ease: "easeOut"
+                          }
+                        }}
+                        className="inline-block"
+                      >
+                        {letter === " " ? "\u00A0" : letter}
+                      </motion.span>
+                    ))}
+                  </motion.h1>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0,
+                      transition: {
+                        delay: 1.5,
+                        duration: 0.6
+                      }
+                    }}
+                    className="text-lg text-gray-300 font-medium"
+                  >
+                    Gerenciador de Provedores
+                  </motion.p>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative z-10 flex items-center gap-4"
-          >
+            
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="relative z-10 flex items-center gap-4"
+            >
             {/* Informações do usuário */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -348,6 +357,7 @@ function AppContent() {
               </motion.button>
             </div>
           </motion.div>
+          </div>
         </motion.header>
 
         <motion.main
