@@ -1,8 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-function Provedores({ listaProvedores, onCardClick }) {
-  // FUNÇÃO DE STATUS MELHORADA: Retorna a classe de texto e a cor base.
+function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
   const statusClass = (status, returnColorBase = false) => {
     if (!status) {
       return returnColorBase ? "gray" : "text-gray-400"; // 'N/A' ou vazio
@@ -50,15 +49,19 @@ function Provedores({ listaProvedores, onCardClick }) {
               opacity: 1, 
               y: 0, 
               scale: 1,
-              rotateX: 0
+              rotateX: 0,
+              transition: {
+                duration: 0.6,
+                delay: searchTerm ? index * 0.05 : index * 0.15,
+                ease: [0.25, 0.46, 0.45, 0.94],
+                type: "spring",
+                stiffness: 120,
+                damping: 20
+              }
             }}
-            transition={{ 
-              duration: 0.8, 
-              delay: index * 0.15,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              type: "spring",
-              stiffness: 100,
-              damping: 15
+            layout
+            transition={{
+              layout: { duration: 0.4, ease: "easeInOut" }
             }}
             whileHover={{ 
               y: -12, 
@@ -122,7 +125,8 @@ function Provedores({ listaProvedores, onCardClick }) {
                 delay: index * 0.15 + 0.3,
                 duration: 0.5
               }}
-              className="text-xl font-bold mb-3 text-cyan-400 border-b border-gray-700 pb-2"
+              className="text-xl font-bold mb-3 text-cyan-400 border-b border-gray-700 pb-2 break-words hyphens-auto leading-tight"
+              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
               {p.razaoSocial}
             </motion.h3>

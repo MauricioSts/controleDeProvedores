@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -49,11 +50,14 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
 function DetalheProvedor() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { userId } = useAuth();
 
   const [provedor, setProvedor] = useState(null);
   const [editando, setEditando] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // Novo estado para o modal
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   // Função para gerar PDF do provedor
   const generatePDF = async (provedor) => {
@@ -228,12 +232,24 @@ function DetalheProvedor() {
 
   useEffect(() => {
     const fetchProvedor = async () => {
+      if (!userId) return;
+
+      setInitialLoading(true);
       try {
         const docRef = doc(db, "provedores", id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProvedor({ id: docSnap.id, ...docSnap.data() });
+          const data = docSnap.data();
+          
+          // Verificar se o provedor pertence ao usuário logado
+          if (data.userId !== userId) {
+            setUnauthorized(true);
+            toast.error("Você não tem permissão para acessar este provedor");
+            return;
+          }
+          
+          setProvedor({ id: docSnap.id, ...data });
         } else {
           toast.error("Provedor não encontrado 😢");
           navigate("/");
@@ -241,11 +257,13 @@ function DetalheProvedor() {
       } catch (error) {
         console.error("Erro ao buscar provedor:", error);
         toast.error("Erro ao buscar provedor");
+      } finally {
+        setInitialLoading(false);
       }
     };
 
     fetchProvedor();
-  }, [id, navigate]);
+  }, [id, navigate, userId]);
 
   // Função de classe atualizada para o tema escuro
   const situacaoClass = (value) => {
@@ -268,6 +286,11 @@ function DetalheProvedor() {
   };
 
   const handleSalvar = async () => {
+    if (!userId || provedor.userId !== userId) {
+      toast.error("Você não tem permissão para editar este provedor");
+      return;
+    }
+
     setLoading(true);
     try {
       const docRef = doc(db, "provedores", id);
@@ -286,6 +309,12 @@ function DetalheProvedor() {
   };
 
   const confirmExclusao = async () => {
+    if (!userId || provedor.userId !== userId) {
+      toast.error("Você não tem permissão para excluir este provedor");
+      setShowConfirmModal(false);
+      return;
+    }
+
     setShowConfirmModal(false);
     try {
       await deleteDoc(doc(db, "provedores", id));
@@ -296,6 +325,68 @@ function DetalheProvedor() {
       toast.error("Erro ao excluir provedor");
     }
   };
+
+  if (initialLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-gray-900 flex items-center justify-center p-6"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
+            Carregando...
+          </h2>
+          <p className="text-gray-400">
+            Buscando informações do provedor
+          </p>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  if (unauthorized) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-gray-900 flex items-center justify-center p-6"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md"
+        >
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-500 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Acesso Negado</h2>
+          <p className="text-gray-300 mb-6">
+            Você não tem permissão para acessar este provedor. Este provedor pertence a outro usuário.
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/")}
+            className="px-6 py-3 bg-cyan-600 text-white rounded-xl hover:bg-cyan-500 transition font-medium"
+          >
+            Voltar para a Lista
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   if (!provedor)
     return <p className="text-center mt-10 text-gray-300">Carregando...</p>;
@@ -340,13 +431,14 @@ function DetalheProvedor() {
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-4xl font-extrabold text-center mb-10 border-b-4 border-cyan-500 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
+          className="text-4xl font-extrabold text-center mb-10 border-b-4 border-cyan-500 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 break-words hyphens-auto leading-tight"
+          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
         >
           {provedor.razaoSocial || "Detalhes do Provedor"}
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Seção CFT - Informações Fixas */}
+          {/* Seção CFT - Informações do Conselho Federal */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -361,13 +453,31 @@ function DetalheProvedor() {
                 <label className="block font-semibold text-gray-300 mb-1 text-sm">
                   Registro no CFT
                 </label>
-                <p className="text-gray-200 text-sm">Regular com Responsável Técnico</p>
+                {editando ? (
+                  <input
+                    type="text"
+                    value={provedor.councilInfo?.registroCft || ""}
+                    onChange={(e) =>
+                      setProvedor({ 
+                        ...provedor, 
+                        councilInfo: {
+                          ...provedor.councilInfo,
+                          registroCft: e.target.value
+                        }
+                      })
+                    }
+                    placeholder="Digite o registro no CFT"
+                    className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition text-sm"
+                  />
+                ) : (
+                  <p className="text-gray-200 text-sm">{provedor.councilInfo?.registroCft || "N/A"}</p>
+                )}
               </div>
               <div>
                 <label className="block font-semibold text-gray-300 mb-1 text-sm">
                   Responsável Técnico
                 </label>
-                <p className="text-gray-200 text-sm">Yan Phelipe Fernandes de Souza Rocha</p>
+                <p className="text-gray-200 text-sm">{provedor.councilInfo?.nome} {provedor.councilInfo?.sobrenome}</p>
               </div>
               <div>
                 <label className="block font-semibold text-gray-300 mb-1 text-sm">
@@ -376,15 +486,21 @@ function DetalheProvedor() {
                 {editando ? (
                   <input
                     type="text"
-                    value={provedor.processosCft || ""}
+                    value={provedor.councilInfo?.processosCft || ""}
                     onChange={(e) =>
-                      setProvedor({ ...provedor, processosCft: e.target.value })
+                      setProvedor({ 
+                        ...provedor, 
+                        councilInfo: {
+                          ...provedor.councilInfo,
+                          processosCft: e.target.value
+                        }
+                      })
                     }
                     placeholder="Digite os processos CFT"
                     className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition text-sm"
                   />
                 ) : (
-                  <p className="text-gray-200 text-sm">{provedor.processosCft || "N/A"}</p>
+                  <p className="text-gray-200 text-sm">{provedor.councilInfo?.processosCft || "N/A"}</p>
                 )}
               </div>
             </div>
@@ -417,11 +533,13 @@ function DetalheProvedor() {
                 placeholder={`Digite ${label.toLowerCase()}`}
                 className={`w-full border border-gray-700 bg-gray-700 text-gray-200 rounded-lg px-4 py-2 
                            focus:outline-none focus:ring-2 focus:ring-cyan-500 transition 
+                           break-words
                            ${
                              !editando
                                ? "bg-gray-700 cursor-not-allowed text-gray-400"
                                : "bg-gray-900"
                            }`}
+                style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
               />
             </motion.div>
           ))}

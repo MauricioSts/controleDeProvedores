@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // 🔹 import Firestore
 import { db } from "../firebase/config"; // 🔹 importa sua instância do Firebase
+import CouncilInfo from "./CouncilInfo";
+import LoadingDots from "./LoadingDots";
 
 function AddProvedor({ handleAddProvedor }) {
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -227,6 +229,10 @@ function AddProvedor({ handleAddProvedor }) {
               <option value="em-analise">Em Análise</option>
             </select>
           </motion.div>
+
+          {/* Informações do Conselho Federal */}
+          <CouncilInfo />
+
           {/* Campos Anatel - Agrupamento e Estilo - seguindo o padrão do DetalheProvedor */}
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
@@ -329,7 +335,14 @@ function AddProvedor({ handleAddProvedor }) {
             disabled={loading}
             className="bg-cyan-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
           >
-            {loading ? "Adicionando..." : "💾 Adicionar Provedor"}
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <LoadingDots />
+                <span className="ml-2">Adicionando...</span>
+              </div>
+            ) : (
+              "💾 Adicionar Provedor"
+            )}
           </motion.button>
         </motion.div>
       </motion.div>
