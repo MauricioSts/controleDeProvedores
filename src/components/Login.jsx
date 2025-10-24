@@ -121,7 +121,7 @@ const Login = () => {
                 transition={{ duration: 0.6, delay: 0.8 }}
                 className="text-lg font-medium text-gray-300 mb-2"
               >
-                Gerenciador de Provedores
+                Conectando eficiência e resultados
               </motion.h2>
               
               <motion.p
