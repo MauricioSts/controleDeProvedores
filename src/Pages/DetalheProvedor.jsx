@@ -62,6 +62,7 @@ function DetalheProvedor() {
   // Função para gerar PDF do provedor
   const generatePDF = async (provedor) => {
     try {
+      
       // Criar um novo documento PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
       
@@ -90,6 +91,7 @@ function DetalheProvedor() {
       pdf.line(20, 35, 190, 35);
       
       let yPosition = 45;
+      
       
       // Informações do CFT com design melhorado
       pdf.setFillColor(31, 41, 55); // Gray-800
@@ -149,6 +151,55 @@ function DetalheProvedor() {
       
       yPosition += 10;
       
+      // Seção Representante Legal - DEPOIS DAS INFORMAÇÕES DO PROVEDOR
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('INFORMACOES DO REPRESENTANTE LEGAL', 25, yPosition + 5);
+      yPosition += 20;
+      
+      const legalRepInfo = [
+        { label: 'Nome Completo', value: provedor.representanteLegal?.nomeCompleto || 'N/A' },
+        { label: 'Documento de Identidade', value: provedor.representanteLegal?.documentoIdentidade || 'N/A' },
+        { label: 'E-mail de Login no SEI', value: provedor.representanteLegal?.emailLogin || 'N/A' },
+        { label: 'Endereco de Domicilio', value: provedor.representanteLegal?.endereco || 'N/A' },
+        { label: 'Estado (UF)', value: provedor.representanteLegal?.estado || 'N/A' },
+        { label: 'Cidade', value: provedor.representanteLegal?.cidade || 'N/A' },
+        { label: 'Data de Nascimento', value: provedor.representanteLegal?.dataNascimento || 'N/A' },
+        { label: 'CPF', value: provedor.representanteLegal?.cpf || 'N/A' },
+        { label: 'Telefone', value: provedor.representanteLegal?.telefone || 'N/A' },
+        { label: 'Bairro', value: provedor.representanteLegal?.bairro || 'N/A' },
+        { label: 'CEP', value: provedor.representanteLegal?.cep || 'N/A' }
+      ];
+      
+      legalRepInfo.forEach((info, index) => {
+        // Alternar cores das linhas
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 250, 252); // Gray-50
+          pdf.rect(20, yPosition - 3, 170, 8, 'F');
+        }
+        
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${info.label}:`, 25, yPosition + 3);
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(info.value, 80, yPosition + 3);
+        
+        yPosition += 8;
+      });
+      
+      yPosition += 10;
+      
+      // Verificar se precisa de nova página
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
       // Informações Regulatórias com design melhorado
       pdf.setFillColor(6, 182, 212);
       pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
@@ -188,26 +239,32 @@ function DetalheProvedor() {
       
       yPosition += 10;
       
-      // Observações com design melhorado
-      if (provedor.obs) {
-        pdf.setFillColor(6, 182, 212);
-        pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(14);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('OBSERVACOES', 25, yPosition + 5);
-        yPosition += 20;
-        
-        pdf.setFillColor(248, 250, 252);
-        pdf.roundedRect(20, yPosition - 3, 170, 20, 3, 3, 'F');
-        
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const splitObs = pdf.splitTextToSize(provedor.obs, 160);
-        pdf.text(splitObs, 25, yPosition + 3);
-        yPosition += 25;
+      // Verificar se precisa de nova página
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
       }
+      
+      // Observações com design melhorado - SEMPRE MOSTRAR
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('OBSERVACOES', 25, yPosition + 5);
+      yPosition += 20;
+      
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(20, yPosition - 3, 170, 20, 3, 3, 'F');
+      
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const obsText = provedor.obs || 'Nenhuma observação registrada';
+      const splitObs = pdf.splitTextToSize(obsText, 160);
+      pdf.text(splitObs, 25, yPosition + 3);
+      yPosition += 25;
+      
       
       // Rodapé melhorado
       const pageHeight = pdf.internal.pageSize.height;
@@ -602,6 +659,108 @@ function DetalheProvedor() {
               <option value="em-analise">Em Análise</option>
             </select>
           </div>
+
+          {/* Seção Representante Legal - ACIMA DA ANATEL */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="col-span-2 mb-6 p-4 bg-gray-700/50 rounded-xl border-l-4 border-purple-500"
+          >
+            <h3 className="text-2xl font-bold text-purple-400 mb-4 border-b border-gray-600 pb-2">
+              Representante Legal
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Nome Completo do Usuário
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.nomeCompleto || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Data de Nascimento
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.dataNascimento || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Documento de Identidade
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.documentoIdentidade || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  CPF
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.cpf || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  E-mail de Login no SEI
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.emailLogin || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Telefone
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.telefone || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Endereço de Domicílio
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.endereco || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Bairro
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.bairro || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Estado (UF)
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.estado || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  Cidade
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.cidade || "N/A"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                  CEP
+                </label>
+                <p className="text-gray-200 bg-gray-800 p-3 rounded-lg">
+                  {provedor.representanteLegal?.cep || "N/A"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Campos Anatel - Agrupamento e Estilo */}
           <div className="col-span-2 mt-6 p-4 bg-gray-700/50 rounded-xl">

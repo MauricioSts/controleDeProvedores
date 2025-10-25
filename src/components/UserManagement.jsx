@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { isAdminEmail } from '../config/adminEmails';
+import { isAdminEmail, getAdminInfo, canRemoveAdmins, isPrimaryAdmin } from '../config/adminEmails';
 import { toast } from 'react-toastify';
 
 const UserManagement = () => {
@@ -37,8 +37,6 @@ const UserManagement = () => {
       setPendingUsers(pending);
       setAuthorizedUsers(authorized);
       setAllProviders(providers);
-      console.log('Todos os usuários carregados:', all);
-      console.log('Todos os provedores carregados:', providers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar usuários');
@@ -74,8 +72,29 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = async (userId, userEmail) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação não pode ser desfeita.`)) {
-      return;
+    // Verificar se o usuário a ser deletado é um administrador
+    if (isAdminEmail(userEmail)) {
+      // Verificar se o usuário atual pode remover administradores
+      if (!canRemoveAdmins(userEmail)) {
+        toast.error('Você não tem permissão para remover administradores');
+        return;
+      }
+      
+      // Verificar se está tentando remover o administrador primário
+      if (isPrimaryAdmin(userEmail)) {
+        toast.error('Este administrador não pode ser removido');
+        return;
+      }
+      
+      // Confirmar exclusão de administrador
+      if (!window.confirm(`ATENÇÃO: Você está prestes a remover um administrador (${userEmail}). Esta ação não pode ser desfeita. Tem certeza?`)) {
+        return;
+      }
+    } else {
+      // Confirmação normal para usuários comuns
+      if (!window.confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação não pode ser desfeita.`)) {
+        return;
+      }
     }
 
     try {
@@ -85,9 +104,11 @@ const UserManagement = () => {
       if (success) {
         // Recarregar todas as listas
         await loadUsers();
+        toast.success('Usuário removido com sucesso');
       }
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
+      toast.error('Erro ao excluir usuário');
     } finally {
       setActionLoading(null);
     }
@@ -315,7 +336,14 @@ const UserManagement = () => {
                             ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                             : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                         }`}>
-                          {isAdminEmail(user.email) ? '👑 Admin' : user.isAuthorized ? 'Autorizado' : user.pendingAuthorization ? 'Pendente' : 'Não autorizado'}
+                          {isAdminEmail(user.email) 
+                            ? '👑 Admin'
+                            : user.isAuthorized 
+                            ? 'Autorizado' 
+                            : user.pendingAuthorization 
+                            ? 'Pendente' 
+                            : 'Não autorizado'
+                          }
                         </div>
 
                         {/* Toggle Provedores Button */}
@@ -374,7 +402,7 @@ const UserManagement = () => {
                           )}
 
                           {/* Botão de Excluir */}
-                          {!isAdminEmail(user.email) && (
+                          {(!isAdminEmail(user.email) || (isAdminEmail(user.email) && canRemoveAdmins(userEmail) && !isPrimaryAdmin(user.email))) && (
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}

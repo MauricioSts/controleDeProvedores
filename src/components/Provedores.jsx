@@ -131,31 +131,6 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
               {p.razaoSocial}
             </motion.h3>
 
-            {/* Informações do usuário que criou */}
-            {(p.userEmail || p.userName) && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  delay: index * 0.15 + 0.35,
-                  duration: 0.4
-                }}
-                className="mb-3 p-2 bg-gray-700/50 rounded-lg border border-gray-600/50"
-              >
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <span>👤</span>
-                  <span className="font-medium text-gray-300">
-                    {p.userName || p.userEmail}
-                  </span>
-                </div>
-                {p.userEmail && p.userName && (
-                  <div className="text-gray-500 text-xs mt-1 ml-4">
-                    {p.userEmail}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
             {/* Conteúdo do Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -263,6 +238,56 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                   {p.obs || "N/A"}
                 </span>
               </p>
+
+              {/* Representante Legal - SEMPRE VISÍVEL */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  delay: index * 0.15 + 0.5,
+                  duration: 0.4
+                }}
+                className="pt-3 border-t border-purple-500/30"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <motion.span
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      opacity: [0.7, 1, 0.7]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="text-purple-400"
+                  >
+                    👤
+                  </motion.span>
+                  <span className="font-semibold text-purple-400 text-sm">
+                    Representante Legal
+                  </span>
+                </div>
+                <div className="space-y-1 text-xs text-gray-300 ml-4">
+                  <p>
+                    <span className="font-medium text-gray-200">Nome:</span>{" "}
+                    {p.representanteLegal?.nomeCompleto || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-200">E-mail SEI:</span>{" "}
+                    {p.representanteLegal?.emailLogin || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-200">Telefone:</span>{" "}
+                    {p.representanteLegal?.telefone || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-200">Cidade/UF:</span>{" "}
+                    {p.representanteLegal?.cidade || "N/A"}
+                    {p.representanteLegal?.estado && `/${p.representanteLegal.estado}`}
+                  </p>
+                </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         );

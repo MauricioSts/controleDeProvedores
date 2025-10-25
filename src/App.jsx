@@ -8,15 +8,11 @@ import Login from "./components/Login";
 import Loading from "./components/Loading";
 import UnauthorizedAccess from "./components/UnauthorizedAccess";
 import UserManagement from "./components/UserManagement";
-import DebugAuth from "./components/DebugAuth";
-import DebugProvedoresInfo from "./components/DebugProvedoresInfo";
-import DebugApp from "./components/DebugApp";
-import DebugAdminStatus from "./components/DebugAdminStatus";
 import AccessDeniedNotification from "./components/AccessDeniedNotification";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { CouncilProvider } from "./contexts/CouncilContext";
-import { isAdminEmail } from "./config/adminEmails";
+import { isAdminEmail, getAdminInfo } from "./config/adminEmails";
 import {
   collection,
   addDoc,
@@ -54,21 +50,16 @@ function AppContent() {
       if (isAdmin) {
         // Admin vê TODOS os provedores
         q = query(provedoresRef);
-        console.log('Admin: Carregando TODOS os provedores');
       } else {
         // Usuário comum vê apenas seus provedores
         q = query(provedoresRef, where("userId", "==", userId));
-        console.log('Usuário: Carregando provedores do userId:', userId);
       }
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        console.log('Provedores encontrados:', snapshot.docs.length);
         const lista = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        
-        console.log('Lista de provedores:', lista);
         
         // Ordenar localmente por data de criação (mais recente primeiro)
         lista.sort((a, b) => {
@@ -118,6 +109,8 @@ function AppContent() {
         registroEstacoes: provedor.registroEstacoes,
         processoAnatel: provedor.processoAnatel,
         obs: provedor.obs,
+        // Dados do Representante Legal
+        representanteLegal: provedor.representanteLegal || {},
         // Metadados do usuário
         userId: userId,
         userEmail: user.email,
@@ -265,7 +258,14 @@ function AppContent() {
                 </span>
               </div>
               <div className="hidden sm:block">
-                <p className="text-gray-300 font-medium">{user?.displayName}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-300 font-medium">{user?.displayName}</p>
+                  {isAdmin && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                      👑 Admin
+                    </span>
+                  )}
+                </div>
                 <p className="text-gray-500 text-xs">{user?.email}</p>
               </div>
             </motion.div>
@@ -485,10 +485,6 @@ function AppContent() {
 
         <ToastContainer position="bottom-right" autoClose={3000} theme="dark" />
         <AccessDeniedNotification />
-        <DebugAdminStatus />
-        <DebugApp />
-        <DebugAuth />
-        <DebugProvedoresInfo />
       </div>
     </Router>
   );

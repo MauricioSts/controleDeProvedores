@@ -23,6 +23,19 @@ function AddProvedor({ handleAddProvedor }) {
   const [loading, setLoading] = useState(false);
   const [obs, setObs] = useState("");
 
+  // Campos do Representante Legal
+  const [nomeCompleto, setNomeCompleto] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
+  const [documentoIdentidade, setDocumentoIdentidade] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [emailLogin, setEmailLogin] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [cep, setCep] = useState("");
+
   // Atualizado para classes de tema escuro: usa fundos escuros e texto mais claro/vibrante
   const situacaoClass = (value) =>
     value
@@ -64,7 +77,18 @@ function AddProvedor({ handleAddProvedor }) {
       !coletaDeDadosEconomicos ||
       !dadosInfra ||
       !registroEstacoes ||
-      !obs
+      !obs ||
+      !nomeCompleto ||
+      !dataNascimento ||
+      !documentoIdentidade ||
+      !cpf ||
+      !emailLogin ||
+      !telefone ||
+      !endereco ||
+      !bairro ||
+      !estado ||
+      !cidade ||
+      !cep
     )
       // Mantendo o alert() conforme a lógica original
       return alert("Preencha todos os campos!");
@@ -89,6 +113,20 @@ function AddProvedor({ handleAddProvedor }) {
         registroEstacoes,
         processoAnatel,
         obs,
+        // Dados do Representante Legal
+        representanteLegal: {
+          nomeCompleto,
+          dataNascimento,
+          documentoIdentidade,
+          cpf,
+          emailLogin,
+          telefone,
+          endereco,
+          bairro,
+          estado,
+          cidade,
+          cep
+        }
       });
 
       // Reset campos
@@ -107,6 +145,18 @@ function AddProvedor({ handleAddProvedor }) {
       setRegistroEstacoes("");
       setProcessoAnatel("");
       setObs("");
+      // Reset campos do representante legal
+      setNomeCompleto("");
+      setDataNascimento("");
+      setDocumentoIdentidade("");
+      setCpf("");
+      setEmailLogin("");
+      setTelefone("");
+      setEndereco("");
+      setBairro("");
+      setEstado("");
+      setCidade("");
+      setCep("");
     } catch (error) {
       console.error("Erro ao adicionar provedor:", error);
       // Mantendo o alert() conforme a lógica original
@@ -227,6 +277,244 @@ function AddProvedor({ handleAddProvedor }) {
             </select>
           </motion.div>
 
+          {/* Seção Representante Legal - MOVIDA PARA ACIMA DO CONSELHO FEDERAL */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="col-span-2 mb-6 p-6 bg-gray-700/50 rounded-xl border-l-4 border-purple-500"
+          >
+            <h3 className="text-2xl font-bold text-purple-400 mb-6 border-b border-gray-600 pb-2">
+              Representante Legal
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Nome Completo do Usuário */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Nome Completo do Usuário *
+                </label>
+                <input
+                  type="text"
+                  value={nomeCompleto}
+                  onChange={(e) => setNomeCompleto(e.target.value)}
+                  placeholder="Digite o nome completo"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Data de Nascimento */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Data de Nascimento *
+                </label>
+                <input
+                  type="date"
+                  value={dataNascimento}
+                  onChange={(e) => setDataNascimento(e.target.value)}
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Documento de Identidade */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Documento de Identidade *
+                </label>
+                <input
+                  type="text"
+                  value={documentoIdentidade}
+                  onChange={(e) => setDocumentoIdentidade(e.target.value)}
+                  placeholder="Digite o número do documento"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* CPF */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  CPF *
+                </label>
+                <input
+                  type="text"
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* E-mail de Login no SEI */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  E-mail de Login no SEI *
+                </label>
+                <input
+                  type="email"
+                  value={emailLogin}
+                  onChange={(e) => setEmailLogin(e.target.value)}
+                  placeholder="Digite o e-mail de login no SEI"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Telefone */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.0 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Telefone *
+                </label>
+                <input
+                  type="tel"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Endereço */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.1 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Endereço de Domicílio *
+                </label>
+                <input
+                  type="text"
+                  value={endereco}
+                  onChange={(e) => setEndereco(e.target.value)}
+                  placeholder="Digite o endereço"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Bairro */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.2 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Bairro *
+                </label>
+                <input
+                  type="text"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                  placeholder="Digite o bairro"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* Estado */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.3 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Estado (UF) *
+                </label>
+                <select
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                >
+                  <option value="" disabled>Selecione o estado</option>
+                  <option value="AC">AC - Acre</option>
+                  <option value="AL">AL - Alagoas</option>
+                  <option value="AP">AP - Amapá</option>
+                  <option value="AM">AM - Amazonas</option>
+                  <option value="BA">BA - Bahia</option>
+                  <option value="CE">CE - Ceará</option>
+                  <option value="DF">DF - Distrito Federal</option>
+                  <option value="ES">ES - Espírito Santo</option>
+                  <option value="GO">GO - Goiás</option>
+                  <option value="MA">MA - Maranhão</option>
+                  <option value="MT">MT - Mato Grosso</option>
+                  <option value="MS">MS - Mato Grosso do Sul</option>
+                  <option value="MG">MG - Minas Gerais</option>
+                  <option value="PA">PA - Pará</option>
+                  <option value="PB">PB - Paraíba</option>
+                  <option value="PR">PR - Paraná</option>
+                  <option value="PE">PE - Pernambuco</option>
+                  <option value="PI">PI - Piauí</option>
+                  <option value="RJ">RJ - Rio de Janeiro</option>
+                  <option value="RN">RN - Rio Grande do Norte</option>
+                  <option value="RS">RS - Rio Grande do Sul</option>
+                  <option value="RO">RO - Rondônia</option>
+                  <option value="RR">RR - Roraima</option>
+                  <option value="SC">SC - Santa Catarina</option>
+                  <option value="SP">SP - São Paulo</option>
+                  <option value="SE">SE - Sergipe</option>
+                  <option value="TO">TO - Tocantins</option>
+                </select>
+              </motion.div>
+
+              {/* Cidade */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.4 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Cidade *
+                </label>
+                <input
+                  type="text"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  placeholder="Digite a cidade"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+
+              {/* CEP */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+                className="col-span-2"
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  CEP *
+                </label>
+                <input
+                  type="text"
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value)}
+                  placeholder="00000-000"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+
           {/* Informações do Conselho Federal */}
           <CouncilInfo />
 
@@ -341,7 +629,7 @@ function AddProvedor({ handleAddProvedor }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 2.2 }}
+            transition={{ duration: 0.5, delay: 1.8 }}
           className="flex justify-center gap-6 mt-12 pt-6 border-t border-gray-700"
         >
           <motion.button
