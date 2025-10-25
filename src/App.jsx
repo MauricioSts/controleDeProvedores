@@ -7,10 +7,16 @@ import DetalheProvedor from "./Pages/DetalheProvedor";
 import Login from "./components/Login";
 import Loading from "./components/Loading";
 import UnauthorizedAccess from "./components/UnauthorizedAccess";
+import UserManagement from "./components/UserManagement";
 import DebugAuth from "./components/DebugAuth";
-import DebugProvedores from "./components/DebugProvedores";
+import DebugProvedoresInfo from "./components/DebugProvedoresInfo";
+import DebugApp from "./components/DebugApp";
+import DebugAdminStatus from "./components/DebugAdminStatus";
+import AccessDeniedNotification from "./components/AccessDeniedNotification";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { CouncilProvider } from "./contexts/CouncilContext";
+import { isAdminEmail } from "./config/adminEmails";
 import {
   collection,
   addDoc,
@@ -29,23 +35,40 @@ import "react-toastify/dist/ReactToastify.css";
 // Componente interno que usa o contexto de autenticação
 function AppContent() {
   const [provedores, setProvedores] = useState([]);
-  const [view, setView] = useState("add"); // "add" ou "lista"
+  const [view, setView] = useState("add"); // "add", "lista" ou "admin"
   const { user, userId, loading, isAuthorized, userEmail, logout } = useAuth();
+  const isAdmin = isAdminEmail(userEmail);
+
+  // Verificar se usuário não-admin está tentando acessar admin
+  useEffect(() => {
+    if (view === "admin" && !isAdmin) {
+      setView("lista");
+    }
+  }, [view, isAdmin]);
   const provedoresRef = collection(db, "provedores");
 
   useEffect(() => {
     if (user && userId) {
-      // Consulta temporária sem orderBy para evitar erro de índice
-      // TODO: Criar índice composto no Firestore Console
-      const q = query(
-        provedoresRef, 
-        where("userId", "==", userId)
-      );
+      let q;
+      
+      if (isAdmin) {
+        // Admin vê TODOS os provedores
+        q = query(provedoresRef);
+        console.log('Admin: Carregando TODOS os provedores');
+      } else {
+        // Usuário comum vê apenas seus provedores
+        q = query(provedoresRef, where("userId", "==", userId));
+        console.log('Usuário: Carregando provedores do userId:', userId);
+      }
+      
       const unsubscribe = onSnapshot(q, (snapshot) => {
+        console.log('Provedores encontrados:', snapshot.docs.length);
         const lista = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+        
+        console.log('Lista de provedores:', lista);
         
         // Ordenar localmente por data de criação (mais recente primeiro)
         lista.sort((a, b) => {
@@ -64,7 +87,7 @@ function AppContent() {
       // Limpar lista se não houver usuário
       setProvedores([]);
     }
-  }, [user, userId]);
+  }, [user, userId, isAdmin]);
 
   const handleAddProvedor = async (provedor) => {
     if (!userId) {
@@ -321,6 +344,45 @@ function AppContent() {
                 </span>
               </motion.button>
 
+              {/* Botão de administração - apenas para admins */}
+              {isAdmin && (
+                <motion.button
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -1,
+                    boxShadow: "0 8px 32px rgba(168, 85, 247, 0.4)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setView("admin")}
+                  className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${
+                    view === "admin"
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl shadow-purple-500/30 border border-purple-400/40"
+                      : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-purple-400/60 backdrop-blur-sm"
+                  }`}
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20"
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  <span className="relative z-10 flex items-center gap-3">
+                    <motion.div
+                      className="w-2 h-2 rounded-full bg-current"
+                      animate={{ 
+                        scale: view === "admin" ? [1, 1.2, 1] : 1,
+                        opacity: view === "admin" ? [0.8, 1, 0.8] : 0.6
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: view === "admin" ? Infinity : 0
+                      }}
+                    />
+                    <span className="hidden sm:inline">Admin</span>
+                  </span>
+                </motion.button>
+              )}
+
               {/* Botão de logout */}
               <motion.button
                 whileHover={{ 
@@ -380,9 +442,29 @@ function AppContent() {
                     >
                       <AddProvedor handleAddProvedor={handleAddProvedor} />
                     </motion.div>
-                  ) : (
+                  ) : view === "lista" ? (
                     <motion.div
                       key="lista"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ListaProvedores lista={provedores} />
+                    </motion.div>
+                  ) : view === "admin" && isAdmin ? (
+                    <motion.div
+                      key="admin"
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -50 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <UserManagement />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="lista-fallback"
                       initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
@@ -402,8 +484,11 @@ function AppContent() {
         </motion.main>
 
         <ToastContainer position="bottom-right" autoClose={3000} theme="dark" />
+        <AccessDeniedNotification />
+        <DebugAdminStatus />
+        <DebugApp />
         <DebugAuth />
-        <DebugProvedores />
+        <DebugProvedoresInfo />
       </div>
     </Router>
   );
@@ -412,11 +497,13 @@ function AppContent() {
 // Componente principal com AuthProvider e CouncilProvider
 function App() {
   return (
-    <AuthProvider>
-      <CouncilProvider>
-        <AppContent />
-      </CouncilProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CouncilProvider>
+          <AppContent />
+        </CouncilProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

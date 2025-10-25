@@ -1,9 +1,11 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import AdvancedLoginForm from './AdvancedLoginForm';
+import AdvancedRegisterForm from './AdvancedRegisterForm';
 
 const Login = () => {
-  const { loginWithGoogle, loading } = useAuth();
+  const { loginWithGoogle, loading, pendingAuthorization, userEmail, userProfile, logout, authMode, setAuthMode } = useAuth();
 
   const handleGoogleLogin = async () => {
     try {
@@ -136,166 +138,293 @@ const Login = () => {
           </motion.div>
         </motion.div>
 
-        {/* Login Button - Super Motion */}
-        <motion.button
-          initial={{ opacity: 0, y: 30, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ 
-            duration: 0.8, 
-            delay: 1.2,
-            type: "spring",
-            stiffness: 100,
-            damping: 15
-          }}
-          whileHover={{ 
-            scale: 1.02,
-            y: -1,
-            boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)",
-            transition: { duration: 0.3, ease: "easeOut" }
-          }}
-          whileTap={{ 
-            scale: 0.95,
-            y: 0,
-            transition: { duration: 0.1 }
-          }}
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl relative overflow-hidden group border border-gray-200/30"
-        >
-          {/* Background Gradient Animation */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
-          
-          {/* Shimmer Effect */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            initial={{ x: "-100%", skewX: "-20deg" }}
-            whileHover={{ x: "100%" }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-          />
-          
-          {/* Pulse Effect */}
+        {/* Status de Autorização Pendente */}
+        {pendingAuthorization && userEmail && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-2xl"
-            animate={{
-              scale: [1, 1.02, 1],
-              opacity: [0, 0.5, 0]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          
-          {/* Google Icon with Advanced Animation */}
-          <motion.div
-            className="relative z-10"
-            animate={{ 
-              rotate: loading ? 360 : 0,
-              scale: loading ? [1, 1.1, 1] : 1
-            }}
-            transition={{ 
-              rotate: { duration: 1, repeat: loading ? Infinity : 0, ease: "linear" },
-              scale: { duration: 0.5, repeat: loading ? Infinity : 0 }
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl"
           >
-            <motion.svg 
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              whileHover={{ 
-                scale: 1.1,
-                rotate: [0, -5, 5, 0],
-                transition: { duration: 0.3 }
+            <div className="flex items-center gap-3 mb-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full"
+              />
+              <h3 className="text-yellow-400 font-semibold">Aguardando Autorização</h3>
+            </div>
+            <p className="text-yellow-300 text-sm">
+              Sua conta <strong>{userEmail}</strong> está aguardando autorização do administrador.
+            </p>
+            <p className="text-yellow-400/70 text-xs mt-2">
+              Você receberá uma notificação quando sua conta for autorizada.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={logout}
+              className="mt-4 px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-600/30 transition-colors text-sm"
+            >
+              Sair da Conta
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Botões de Alternância */}
+        {!pendingAuthorization && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="mb-6 flex bg-gray-700/30 rounded-xl p-1"
+          >
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setAuthMode('login')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                authMode === 'login'
+                  ? 'bg-cyan-500 text-white shadow-lg'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Login
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setAuthMode('register')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                authMode === 'register'
+                  ? 'bg-cyan-500 text-white shadow-lg'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Cadastro
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setAuthMode('google')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                authMode === 'google'
+                  ? 'bg-cyan-500 text-white shadow-lg'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Google
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Formulários de Autenticação */}
+        <AnimatePresence mode="wait">
+          {authMode === 'login' && (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, scale: 0.8, rotateY: 15 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              exit={{ opacity: 0, scale: 0.8, rotateY: -15 }}
+              transition={{ 
+                duration: 0.6, 
+                type: "spring", 
+                stiffness: 100, 
+                damping: 15 
               }}
             >
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </motion.svg>
-          </motion.div>
-          
-          {/* Text with Typewriter Effect */}
-          <motion.span 
-            className="relative z-10 text-base font-medium"
-            animate={{
-              backgroundPosition: loading ? ["0% 50%", "100% 50%", "0% 50%"] : "0% 50%"
-            }}
-            transition={{
-              backgroundPosition: {
-                duration: 1.5,
-                repeat: loading ? Infinity : 0,
-                ease: "easeInOut"
-              }
-            }}
-          >
-            {loading ? (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2"
-              >
-                <motion.span
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                >
-                  Entrando
-                </motion.span>
-                <motion.div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 h-1 bg-current rounded-full"
-                      animate={{
-                        scale: [0.5, 1, 0.5],
-                        opacity: [0.3, 1, 0.3]
-                      }}
-                      transition={{
-                        duration: 0.6,
-                        repeat: Infinity,
-                        delay: i * 0.2
-                      }}
-                    />
-                  ))}
-                </motion.div>
-              </motion.span>
-            ) : (
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.5, duration: 0.5 }}
-              >
-                Entrar com Google
-              </motion.span>
-            )}
-          </motion.span>
-          
-          {/* Loading Spinner */}
-          {loading && (
-            <motion.div
-              className="absolute right-3 w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            />
+              <AdvancedLoginForm />
+            </motion.div>
           )}
-        </motion.button>
+          
+          {authMode === 'register' && (
+            <motion.div
+              key="register"
+              initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              exit={{ opacity: 0, scale: 0.8, rotateY: 15 }}
+              transition={{ 
+                duration: 0.6, 
+                type: "spring", 
+                stiffness: 100, 
+                damping: 15 
+              }}
+            >
+              <AdvancedRegisterForm />
+            </motion.div>
+          )}
+          
+          {authMode === 'google' && (
+            <motion.div
+              key="google"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Login Button - Super Motion */}
+              <motion.button
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: 0.2,
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  y: -1,
+                  boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)",
+                  transition: { duration: 0.3, ease: "easeOut" }
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  y: 0,
+                  transition: { duration: 0.1 }
+                }}
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl relative overflow-hidden group border border-gray-200/30"
+              >
+                {/* Background Gradient Animation */}
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+                
+                {/* Shimmer Effect */}
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  initial={{ x: "-100%", skewX: "-20deg" }}
+                  whileHover={{ x: "100%" }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                />
+                
+                {/* Pulse Effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-2xl"
+                  animate={{
+                    scale: [1, 1.02, 1],
+                    opacity: [0, 0.5, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                
+                {/* Google Icon with Advanced Animation */}
+                <motion.div
+                  className="relative z-10"
+                  animate={{ 
+                    rotate: loading ? 360 : 0,
+                    scale: loading ? [1, 1.1, 1] : 1
+                  }}
+                  transition={{ 
+                    rotate: { duration: 1, repeat: loading ? Infinity : 0, ease: "linear" },
+                    scale: { duration: 0.5, repeat: loading ? Infinity : 0 }
+                  }}
+                >
+                  <motion.svg 
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    whileHover={{ 
+                      scale: 1.1,
+                      rotate: [0, -5, 5, 0],
+                      transition: { duration: 0.3 }
+                    }}
+                  >
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </motion.svg>
+                </motion.div>
+                
+                {/* Text with Typewriter Effect */}
+                <motion.span 
+                  className="relative z-10 text-base font-medium"
+                  animate={{
+                    backgroundPosition: loading ? ["0% 50%", "100% 50%", "0% 50%"] : "0% 50%"
+                  }}
+                  transition={{
+                    backgroundPosition: {
+                      duration: 1.5,
+                      repeat: loading ? Infinity : 0,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  {loading ? (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <motion.span
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                      >
+                        Entrando
+                      </motion.span>
+                      <motion.div className="flex gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            className="w-1 h-1 bg-current rounded-full"
+                            animate={{
+                              scale: [0.5, 1, 0.5],
+                              opacity: [0.3, 1, 0.3]
+                            }}
+                            transition={{
+                              duration: 0.6,
+                              repeat: Infinity,
+                              delay: i * 0.2
+                            }}
+                          />
+                        ))}
+                      </motion.div>
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.5, duration: 0.5 }}
+                    >
+                      Entrar com Google
+                    </motion.span>
+                  )}
+                </motion.span>
+                
+                {/* Loading Spinner */}
+                {loading && (
+                  <motion.div
+                    className="absolute right-3 w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Decorative Elements */}
         <motion.div

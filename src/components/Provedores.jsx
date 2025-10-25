@@ -131,6 +131,31 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
               {p.razaoSocial}
             </motion.h3>
 
+            {/* Informações do usuário que criou */}
+            {(p.userEmail || p.userName) && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  delay: index * 0.15 + 0.35,
+                  duration: 0.4
+                }}
+                className="mb-3 p-2 bg-gray-700/50 rounded-lg border border-gray-600/50"
+              >
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span>👤</span>
+                  <span className="font-medium text-gray-300">
+                    {p.userName || p.userEmail}
+                  </span>
+                </div>
+                {p.userEmail && p.userName && (
+                  <div className="text-gray-500 text-xs mt-1 ml-4">
+                    {p.userEmail}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Conteúdo do Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
