@@ -151,49 +151,6 @@ function DetalheProvedor() {
       
       yPosition += 10;
       
-      // Seção Representante Legal - DEPOIS DAS INFORMAÇÕES DO PROVEDOR
-      pdf.setFillColor(6, 182, 212);
-      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('INFORMACOES DO REPRESENTANTE LEGAL', 25, yPosition + 5);
-      yPosition += 20;
-      
-      const legalRepInfo = [
-        { label: 'Nome Completo', value: provedor.representanteLegal?.nomeCompleto || 'N/A' },
-        { label: 'Documento de Identidade', value: provedor.representanteLegal?.documentoIdentidade || 'N/A' },
-        { label: 'E-mail de Login no SEI', value: provedor.representanteLegal?.emailLogin || 'N/A' },
-        { label: 'Endereco de Domicilio', value: provedor.representanteLegal?.endereco || 'N/A' },
-        { label: 'Estado (UF)', value: provedor.representanteLegal?.estado || 'N/A' },
-        { label: 'Cidade', value: provedor.representanteLegal?.cidade || 'N/A' },
-        { label: 'Data de Nascimento', value: provedor.representanteLegal?.dataNascimento || 'N/A' },
-        { label: 'CPF', value: provedor.representanteLegal?.cpf || 'N/A' },
-        { label: 'Telefone', value: provedor.representanteLegal?.telefone || 'N/A' },
-        { label: 'Bairro', value: provedor.representanteLegal?.bairro || 'N/A' },
-        { label: 'CEP', value: provedor.representanteLegal?.cep || 'N/A' }
-      ];
-      
-      legalRepInfo.forEach((info, index) => {
-        // Alternar cores das linhas
-        if (index % 2 === 0) {
-          pdf.setFillColor(248, 250, 252); // Gray-50
-          pdf.rect(20, yPosition - 3, 170, 8, 'F');
-        }
-        
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(`${info.label}:`, 25, yPosition + 3);
-        
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(info.value, 80, yPosition + 3);
-        
-        yPosition += 8;
-      });
-      
-      yPosition += 10;
-      
       // Verificar se precisa de nova página
       if (yPosition > 250) {
         pdf.addPage();

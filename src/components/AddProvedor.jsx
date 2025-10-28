@@ -22,6 +22,10 @@ function AddProvedor({ handleAddProvedor }) {
   const [processoAnatel, setProcessoAnatel] = useState("");
   const [loading, setLoading] = useState(false);
   const [obs, setObs] = useState("");
+  
+  // Estados para validação visual
+  const [errors, setErrors] = useState({});
+  const [shakeFields, setShakeFields] = useState({});
 
   // Campos do Representante Legal
   const [nomeCompleto, setNomeCompleto] = useState("");
@@ -36,7 +40,35 @@ function AddProvedor({ handleAddProvedor }) {
   const [cidade, setCidade] = useState("");
   const [cep, setCep] = useState("");
 
-  // Atualizado para classes de tema escuro: usa fundos escuros e texto mais claro/vibrante
+  // Função para validar campos obrigatórios
+  const validateRequiredFields = () => {
+    const requiredFields = {
+      razaoSocial,
+      cnpj,
+      nomeCompleto,
+      cpf
+    };
+    
+    const newErrors = {};
+    const newShakeFields = {};
+    
+    Object.keys(requiredFields).forEach(field => {
+      if (!requiredFields[field]) {
+        newErrors[field] = true;
+        newShakeFields[field] = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    setShakeFields(newShakeFields);
+    
+    // Remove o tremor após 500ms
+    setTimeout(() => {
+      setShakeFields({});
+    }, 500);
+    
+    return Object.keys(newErrors).length === 0;
+  };
   const situacaoClass = (value) =>
     value
       ? value === "regular"
@@ -63,35 +95,9 @@ function AddProvedor({ handleAddProvedor }) {
   };
 
   async function handleSubmit() {
-    if (
-      !razaoSocial ||
-      !cnpj ||
-      !regime ||
-      !numeroFiscal ||
-      !numeroScm ||
-      !statusEmpresa ||
-      !cnpjAnatel ||
-      !situacaoAnatel ||
-      !fust ||
-      !coletaDeDadosM ||
-      !coletaDeDadosEconomicos ||
-      !dadosInfra ||
-      !registroEstacoes ||
-      !obs ||
-      !nomeCompleto ||
-      !dataNascimento ||
-      !documentoIdentidade ||
-      !cpf ||
-      !emailLogin ||
-      !telefone ||
-      !endereco ||
-      !bairro ||
-      !estado ||
-      !cidade ||
-      !cep
-    )
-      // Mantendo o alert() conforme a lógica original
-      return alert("Preencha todos os campos!");
+    if (!validateRequiredFields()) {
+      return;
+    }
 
     setLoading(true);
 
@@ -129,7 +135,7 @@ function AddProvedor({ handleAddProvedor }) {
         }
       });
 
-      // Reset campos
+      // Reset todos os campos
       setRazaoSocial("");
       setCnpj("");
       setRegime("");
@@ -204,6 +210,14 @@ function AddProvedor({ handleAddProvedor }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+              whileInView={{
+                x: (campo === "razaoSocial" && shakeFields.razaoSocial) || (campo === "cnpj" && shakeFields.cnpj) 
+                  ? [0, -10, 10, -10, 10, 0] 
+                  : 0
+              }}
+              transition={{
+                x: { duration: 0.5, ease: "easeInOut" }
+              }}
             >
               <label className="block font-semibold text-gray-300 mb-1">
                 {label}
@@ -215,13 +229,31 @@ function AddProvedor({ handleAddProvedor }) {
                        campo === "numeroFiscal" ? numeroFiscal :
                        campo === "numeroScm" ? numeroScm : ""}
                 onChange={(e) => {
-                  if (campo === "razaoSocial") setRazaoSocial(e.target.value);
-                  else if (campo === "cnpj") setCnpj(e.target.value);
+                  if (campo === "razaoSocial") {
+                    setRazaoSocial(e.target.value);
+                    if (errors.razaoSocial) {
+                      setErrors(prev => ({ ...prev, razaoSocial: false }));
+                    }
+                  }
+                  else if (campo === "cnpj") {
+                    setCnpj(e.target.value);
+                    if (errors.cnpj) {
+                      setErrors(prev => ({ ...prev, cnpj: false }));
+                    }
+                  }
                   else if (campo === "numeroFiscal") setNumeroFiscal(e.target.value);
                   else if (campo === "numeroScm") setNumeroScm(e.target.value);
                 }}
                 placeholder={`Digite ${label.toLowerCase()}`}
-                className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
+                  (campo === "razaoSocial" && errors.razaoSocial) || (campo === "cnpj" && errors.cnpj)
+                    ? "border-red-500 bg-red-900/20 text-red-200"
+                    : "border-gray-700 bg-gray-900 text-gray-200"
+                } ${
+                  (campo === "razaoSocial" && shakeFields.razaoSocial) || (campo === "cnpj" && shakeFields.cnpj)
+                    ? "animate-pulse"
+                    : ""
+                }`}
               />
             </motion.div>
           ))}
@@ -293,16 +325,33 @@ function AddProvedor({ handleAddProvedor }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
+                whileInView={{
+                  x: shakeFields.nomeCompleto ? [0, -10, 10, -10, 10, 0] : 0
+                }}
+                transition={{
+                  x: { duration: 0.5, ease: "easeInOut" }
+                }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Nome Completo do Usuário *
+                  Nome Completo do Usuário
                 </label>
                 <input
                   type="text"
                   value={nomeCompleto}
-                  onChange={(e) => setNomeCompleto(e.target.value)}
+                  onChange={(e) => {
+                    setNomeCompleto(e.target.value);
+                    if (errors.nomeCompleto) {
+                      setErrors(prev => ({ ...prev, nomeCompleto: false }));
+                    }
+                  }}
                   placeholder="Digite o nome completo"
-                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+                    errors.nomeCompleto
+                      ? "border-red-500 bg-red-900/20 text-red-200"
+                      : "border-gray-700 bg-gray-900 text-gray-200"
+                  } ${
+                    shakeFields.nomeCompleto ? "animate-pulse" : ""
+                  }`}
                 />
               </motion.div>
 
@@ -313,7 +362,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Data de Nascimento *
+                  Data de Nascimento
                 </label>
                 <input
                   type="date"
@@ -330,7 +379,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 0.7 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Documento de Identidade *
+                  Documento de Identidade
                 </label>
                 <input
                   type="text"
@@ -346,16 +395,33 @@ function AddProvedor({ handleAddProvedor }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.8 }}
+                whileInView={{
+                  x: shakeFields.cpf ? [0, -10, 10, -10, 10, 0] : 0
+                }}
+                transition={{
+                  x: { duration: 0.5, ease: "easeInOut" }
+                }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  CPF *
+                  CPF
                 </label>
                 <input
                   type="text"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
+                  onChange={(e) => {
+                    setCpf(e.target.value);
+                    if (errors.cpf) {
+                      setErrors(prev => ({ ...prev, cpf: false }));
+                    }
+                  }}
                   placeholder="000.000.000-00"
-                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+                    errors.cpf
+                      ? "border-red-500 bg-red-900/20 text-red-200"
+                      : "border-gray-700 bg-gray-900 text-gray-200"
+                  } ${
+                    shakeFields.cpf ? "animate-pulse" : ""
+                  }`}
                 />
               </motion.div>
 
@@ -366,7 +432,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  E-mail de Login no SEI *
+                  E-mail de Login no SEI
                 </label>
                 <input
                   type="email"
@@ -384,7 +450,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 1.0 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Telefone *
+                  Telefone
                 </label>
                 <input
                   type="tel"
@@ -402,7 +468,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 1.1 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Endereço de Domicílio *
+                  Endereço de Domicílio
                 </label>
                 <input
                   type="text"
@@ -420,7 +486,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 1.2 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Bairro *
+                  Bairro
                 </label>
                 <input
                   type="text"
@@ -438,7 +504,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 1.3 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Estado (UF) *
+                  Estado (UF)
                 </label>
                 <select
                   value={estado}
@@ -483,7 +549,7 @@ function AddProvedor({ handleAddProvedor }) {
                 transition={{ duration: 0.5, delay: 1.4 }}
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  Cidade *
+                  Cidade
                 </label>
                 <input
                   type="text"
@@ -502,7 +568,7 @@ function AddProvedor({ handleAddProvedor }) {
                 className="col-span-2"
               >
                 <label className="block font-semibold text-gray-300 mb-1">
-                  CEP *
+                  CEP
                 </label>
                 <input
                   type="text"
