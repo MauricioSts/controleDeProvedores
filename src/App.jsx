@@ -12,7 +12,7 @@ import AccessDeniedNotification from "./components/AccessDeniedNotification";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { CouncilProvider } from "./contexts/CouncilContext";
-import { isAdminEmail, getAdminInfo } from "./config/adminEmails";
+import { isAdminEmail, getAdminInfo, canViewAllProviders, canViewUserManagement } from "./config/adminEmails";
 import {
   collection,
   addDoc,
@@ -34,24 +34,26 @@ function AppContent() {
   const [view, setView] = useState("add"); // "add", "lista" ou "admin"
   const { user, userId, loading, isAuthorized, userEmail, logout } = useAuth();
   const isAdmin = isAdminEmail(userEmail);
+  const canViewAll = canViewAllProviders(userEmail);
+  const canViewAdmin = canViewUserManagement(userEmail);
 
   // Verificar se usuário não-admin está tentando acessar admin
   useEffect(() => {
-    if (view === "admin" && !isAdmin) {
+    if (view === "admin" && !canViewAdmin) {
       setView("lista");
     }
-  }, [view, isAdmin]);
+  }, [view, canViewAdmin]);
   const provedoresRef = collection(db, "provedores");
 
   useEffect(() => {
     if (user && userId) {
       let q;
       
-      if (isAdmin) {
-        // Admin vê TODOS os provedores
+      if (canViewAll) {
+        // Apenas mauriciogear4 vê TODOS os provedores
         q = query(provedoresRef);
       } else {
-        // Usuário comum vê apenas seus provedores
+        // Todos os outros usuários (incluindo contato.yanphelipe) veem apenas seus provedores
         q = query(provedoresRef, where("userId", "==", userId));
       }
       
@@ -78,7 +80,7 @@ function AppContent() {
       // Limpar lista se não houver usuário
       setProvedores([]);
     }
-  }, [user, userId, isAdmin]);
+  }, [user, userId, canViewAll]);
 
   const handleAddProvedor = async (provedor) => {
     if (!userId) {
@@ -344,8 +346,8 @@ function AppContent() {
                 </span>
               </motion.button>
 
-              {/* Botão de administração - apenas para admins */}
-              {isAdmin && (
+              {/* Botão de administração - para admins */}
+              {canViewAdmin && (
                 <motion.button
                   whileHover={{ 
                     scale: 1.02,
@@ -452,7 +454,7 @@ function AppContent() {
                     >
                       <ListaProvedores lista={provedores} />
                     </motion.div>
-                  ) : view === "admin" && isAdmin ? (
+                  ) : view === "admin" && canViewAdmin ? (
                     <motion.div
                       key="admin"
                       initial={{ opacity: 0, y: 50 }}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { isAdminEmail, getAdminInfo, canRemoveAdmins, isPrimaryAdmin } from '../config/adminEmails';
+import { isAdminEmail, getAdminInfo, canRemoveAdmins, isPrimaryAdmin, canViewAllProviders } from '../config/adminEmails';
 import { toast } from 'react-toastify';
 
 const UserManagement = () => {
@@ -17,6 +17,8 @@ const UserManagement = () => {
   const [loadingProviders, setLoadingProviders] = useState({});
 
   const isAdmin = isAdminEmail(userEmail);
+  const canViewAll = canViewAllProviders(userEmail);
+  const canRemove = canRemoveAdmins(userEmail);
 
   useEffect(() => {
     if (isAdmin) {
@@ -27,16 +29,43 @@ const UserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const [all, pending, authorized, providers] = await Promise.all([
-        getAllUsers(),
-        getPendingUsers(),
-        getAuthorizedUsers(),
-        getAllProviders()
-      ]);
-      setAllUsers(all);
-      setPendingUsers(pending);
-      setAuthorizedUsers(authorized);
-      setAllProviders(providers);
+      
+      if (canViewAll) {
+        // Admin primário: carrega todos os dados
+        const [all, pending, authorized, providers] = await Promise.all([
+          getAllUsers(),
+          getPendingUsers(),
+          getAuthorizedUsers(),
+          getAllProviders()
+        ]);
+        setAllUsers(all);
+        setPendingUsers(pending);
+        setAuthorizedUsers(authorized);
+        setAllProviders(providers);
+      } else {
+        // Admin secundário: carrega dados básicos e quantidade de provedores por usuário
+        const [all, pending, authorized] = await Promise.all([
+          getAllUsers(),
+          getPendingUsers(),
+          getAuthorizedUsers()
+        ]);
+        
+        // Para cada usuário, buscar apenas a quantidade de provedores
+        const usersWithProviderCount = await Promise.all(
+          all.map(async (user) => {
+            const userProviders = await getUserProviders(user.id);
+            return {
+              ...user,
+              providerCount: userProviders.length
+            };
+          })
+        );
+        
+        setAllUsers(usersWithProviderCount);
+        setPendingUsers(pending);
+        setAuthorizedUsers(authorized);
+        setAllProviders([]); // Não carrega todos os provedores
+      }
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar usuários');
@@ -75,7 +104,7 @@ const UserManagement = () => {
     // Verificar se o usuário a ser deletado é um administrador
     if (isAdminEmail(userEmail)) {
       // Verificar se o usuário atual pode remover administradores
-      if (!canRemoveAdmins(userEmail)) {
+      if (!canRemove) {
         toast.error('Você não tem permissão para remover administradores');
         return;
       }
@@ -128,7 +157,24 @@ const UserManagement = () => {
         setLoadingProviders(prev => ({ ...prev, [userId]: true }));
         try {
           const providers = await getUserProviders(userId);
-          setUserProviders(prev => ({ ...prev, [userId]: providers }));
+          
+          if (canViewAll) {
+            // Admin primário: mostra todos os detalhes
+            setUserProviders(prev => ({ ...prev, [userId]: providers }));
+          } else {
+            // Admin secundário: mostra apenas informações básicas (sem dados sensíveis)
+            const basicProviders = providers.map(provider => ({
+              id: provider.id,
+              razaoSocial: provider.razaoSocial,
+              cnpj: provider.cnpj,
+              regime: provider.regime,
+              numeroFiscal: provider.numeroFiscal,
+              statusEmpresa: provider.statusEmpresa,
+              createdAt: provider.createdAt,
+              // Não inclui dados do representante legal ou outras informações sensíveis
+            }));
+            setUserProviders(prev => ({ ...prev, [userId]: basicProviders }));
+          }
         } catch (error) {
           console.error('Erro ao carregar provedores:', error);
           toast.error('Erro ao carregar provedores do usuário');
@@ -198,8 +244,10 @@ const UserManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-white mb-2">Gerenciamento de Usuários</h1>
-          <p className="text-gray-300">Autorize ou negue acesso aos usuários do sistema</p>
+          <div className="mb-4">
+            <h1 className="text-4xl font-bold text-white mb-2">Gerenciamento de Usuários</h1>
+            <p className="text-gray-300">Autorize ou negue acesso aos usuários do sistema</p>
+          </div>
         </motion.div>
 
         {/* Stats Cards */}
@@ -251,8 +299,12 @@ const UserManagement = () => {
                 <span className="text-2xl">🏢</span>
               </div>
               <div>
-                <p className="text-purple-300 text-sm">Total Provedores</p>
-                <p className="text-2xl font-bold text-white">{allProviders.length}</p>
+                <p className="text-purple-300 text-sm">
+                  Total Provedores
+                </p>
+                <p className="text-2xl font-bold text-white">
+                  {canViewAll ? allProviders.length : allUsers.reduce((total, user) => total + (user.providerCount || 0), 0)}
+                </p>
               </div>
             </div>
           </div>
@@ -439,7 +491,12 @@ const UserManagement = () => {
                           <div className="p-6">
                             <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                               <span>🏢</span>
-                              Provedores do Usuário
+                              {canViewAll ? 'Provedores do Usuário' : 'Informações Básicas dos Provedores'}
+                              {!canViewAll && (
+                                <span className="text-xs text-blue-400 ml-2">
+                                  (Dados limitados)
+                                </span>
+                              )}
                             </h4>
                             
                             {loadingProviders[user.id] ? (

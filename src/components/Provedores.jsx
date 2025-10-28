@@ -22,6 +22,26 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
     return returnColorBase ? "gray" : "text-gray-400"; // Outros status
   };
 
+  // Função para verificar se há informações irregulares
+  const hasIrregularInfo = (provedor) => {
+    const irregularStatuses = ['irregular', 'inativa', 'inativo'];
+    const camposParaVerificar = [
+      'statusEmpresa',
+      'cnpjAnatel',
+      'situacaoAnatel',
+      'fust',
+      'coletaDeDadosM',
+      'coletaDeDadosEconomicos',
+      'dadosInfra',
+      'registroEstacoes'
+    ];
+
+    return camposParaVerificar.some(campo => {
+      const value = provedor[campo]?.toLowerCase();
+      return value && irregularStatuses.includes(value);
+    });
+  };
+
   if (!listaProvedores || listaProvedores.length === 0) {
     return <p className="text-gray-400 italic">Nenhum provedor cadastrado.</p>;
   }
@@ -36,6 +56,8 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
             ? "bg-red-900/50 text-red-300"
             : "bg-cyan-900/50 text-cyan-300";
 
+        const temIrregularidade = hasIrregularInfo(p);
+        
         return (
           <motion.div
             key={p.id}
@@ -81,6 +103,24 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                        hover:shadow-cyan-500/30 hover:shadow-2xl transition-all duration-300 ease-in-out 
                        cursor-pointer relative"
           >
+            {/* Bolinha amarela para irregularidades */}
+            {temIrregularidade && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  delay: index * 0.15 + 0.3,
+                  duration: 0.4,
+                  type: "spring",
+                  stiffness: 200
+                }}
+                className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full shadow-lg animate-pulse flex items-center justify-center"
+                title="Há informações irregulares"
+              >
+                <span className="text-xs text-gray-900 font-bold">!</span>
+              </motion.div>
+            )}
+            
             {/* Indicadores coloridos nos cantos superiores */}
             <motion.div 
               initial={{ scale: 0, opacity: 0 }}
@@ -91,7 +131,7 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                 type: "spring",
                 stiffness: 200
               }}
-              className={`absolute top-3 right-3 w-4 h-4 rounded-full shadow-lg ${
+              className={`absolute ${temIrregularidade ? 'top-3 left-3' : 'top-3 right-3'} w-4 h-4 rounded-full shadow-lg ${
                 p.statusEmpresa?.toLowerCase() === 'ativa' || p.statusEmpresa?.toLowerCase() === 'ativo' 
                   ? 'bg-green-500' 
                   : p.statusEmpresa?.toLowerCase() === 'inativa' || p.statusEmpresa?.toLowerCase() === 'inativo'
@@ -99,23 +139,6 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                   : 'bg-gray-500'
               }`}
               title={`Status: ${p.statusEmpresa || 'N/A'}`}
-            ></motion.div>
-            <motion.div 
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ 
-                delay: index * 0.15 + 0.6,
-                duration: 0.4,
-                type: "spring",
-                stiffness: 200
-              }}
-              className={`absolute top-3 left-3 w-3 h-3 rounded-full ${
-                p.statusEmpresa?.toLowerCase() === 'ativa' || p.statusEmpresa?.toLowerCase() === 'ativo' 
-                  ? 'bg-green-400' 
-                  : p.statusEmpresa?.toLowerCase() === 'inativa' || p.statusEmpresa?.toLowerCase() === 'inativo'
-                  ? 'bg-red-400'
-                  : 'bg-gray-400'
-              }`}
             ></motion.div>
             {/* Título do Card em Light Blue (Cyan) */}
             <motion.h3 
@@ -141,7 +164,7 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
               }}
               className="space-y-2 text-sm text-gray-300"
             >
-              {/* CORREÇÃO APLICADA AQUI: Status Empresa com Badge */}
+              {/* Status Empresa com Badge */}
               <p className="flex justify-between items-center text-base">
                 <span className="font-medium text-gray-100">
                   Status Empresa:
@@ -153,85 +176,16 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                 </span>
               </p>
 
-              <p>
-                <span className="font-medium text-gray-200">Regime:</span>{" "}
-                {p.regime}
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">CNPJ:</span>{" "}
-                {p.cnpj}
-              </p>
-
-              {/* Informações regulatórias */}
+              {/* Nº Fistel e Nº SCM */}
               <p className="pt-2 border-t border-gray-700/50">
                 <span className="font-medium text-gray-200">Nº Fistel:</span>{" "}
-                {p.numeroFiscal}
+                {p.numeroFiscal || "N/A"}
                 <span className="mx-2 text-gray-500">|</span>
                 <span className="font-medium text-gray-200">Nº SCM:</span>{" "}
-                {p.numeroScm}
+                {p.numeroScm || "N/A"}
               </p>
 
-              {/* Status Condicionais com Cores de Destaque (Outros status) */}
-              <p>
-                <span className="font-medium text-gray-200">CNPJ Anatel:</span>{" "}
-                <span className={statusClass(p.cnpjAnatel)}>
-                  {p.cnpjAnatel || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Situação Anatel/Ancine:{" "}
-                </span>
-                <span className={statusClass(p.situacaoAnatel)}>
-                  {p.situacaoAnatel || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Processo Anatel:
-                </span>{" "}
-                <span className="text-gray-400">
-                  {p.processoAnatel || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">FUST:</span>{" "}
-                <span className={statusClass(p.fust)}>{p.fust || "N/A"}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Coleta de Dados Mensal:
-                </span>{" "}
-                <span className={statusClass(p.coletaDeDadosM)}>
-                  {p.coletaDeDadosM || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Coleta de Dados Econômicos:
-                </span>{" "}
-                <span className={statusClass(p.coletaDeDadosEconomicos)}>
-                  {p.coletaDeDadosEconomicos || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Dados de Infraestrutura:
-                </span>{" "}
-                <span className={statusClass(p.dadosInfra)}>
-                  {p.dadosInfra || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-200">
-                  Registro de Estações:
-                </span>{" "}
-                <span className={statusClass(p.registroEstacoes)}>
-                  {p.registroEstacoes || "N/A"}
-                </span>
-              </p>
-
-              {/* Observações - destaque sutil */}
+              {/* Observações */}
               <p className="pt-2 border-t border-gray-700/50">
                 <span className="font-medium text-gray-200">Observações:</span>
                 <span className="text-gray-500 italic ml-1 text-xs">
@@ -239,7 +193,7 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                 </span>
               </p>
 
-              {/* Representante Legal - SEMPRE VISÍVEL */}
+              {/* Representante Legal - apenas o nome */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -268,25 +222,45 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                     Representante Legal
                   </span>
                 </div>
-                <div className="space-y-1 text-xs text-gray-300 ml-4">
-                  <p>
-                    <span className="font-medium text-gray-200">Nome:</span>{" "}
-                    {p.representanteLegal?.nomeCompleto || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-200">E-mail SEI:</span>{" "}
-                    {p.representanteLegal?.emailLogin || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-200">Telefone:</span>{" "}
-                    {p.representanteLegal?.telefone || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-200">Cidade/UF:</span>{" "}
-                    {p.representanteLegal?.cidade || "N/A"}
-                    {p.representanteLegal?.estado && `/${p.representanteLegal.estado}`}
-                  </p>
+                <p className="text-xs text-gray-300 ml-4">
+                  <span className="font-medium text-gray-200">Nome:</span>{" "}
+                  {p.representanteLegal?.nomeCompleto || "N/A"}
+                </p>
+              </motion.div>
+
+              {/* Responsável Técnico */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  delay: index * 0.15 + 0.6,
+                  duration: 0.4
+                }}
+                className="pt-3 border-t border-blue-500/30"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <motion.span
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      opacity: [0.7, 1, 0.7]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="text-blue-400"
+                  >
+                    🔧
+                  </motion.span>
+                  <span className="font-semibold text-blue-400 text-sm">
+                    Responsável Técnico
+                  </span>
                 </div>
+                <p className="text-xs text-gray-300 ml-4">
+                  <span className="font-medium text-gray-200">Nome:</span>{" "}
+                  {p.responsavelTecnico?.nomeCompleto || "N/A"}
+                </p>
               </motion.div>
             </motion.div>
           </motion.div>

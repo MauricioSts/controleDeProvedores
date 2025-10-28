@@ -1,7 +1,7 @@
 // Sistema de níveis de administração
 export const ADMIN_LEVELS = {
-  PRIMARY: 1,    // mauriciogear4@gmail.com - Acesso total, pode remover outros admins
-  SECONDARY: 2   // contato.yanphelipe@gmail.com - Acesso total, mas não pode remover o admin primário
+  PRIMARY: 1,    // mauriciogear4@gmail.com - Acesso total, pode ver todos os provedores
+  SECONDARY: 2   // contato.yanphelipe@gmail.com - Acesso restrito, apenas seus próprios provedores
 };
 
 // Configuração de administradores com níveis
@@ -9,12 +9,26 @@ export const ADMIN_CONFIG = {
   'mauriciogear4@gmail.com': {
     level: ADMIN_LEVELS.PRIMARY,
     name: 'Mauricio Santos',
-    canRemoveAdmins: true
+    canRemoveAdmins: true,
+    canViewAllProviders: true,
+    canManageUsers: true,
+    canViewUserManagement: true
   },
   'contato.yanphelipe@gmail.com': {
     level: ADMIN_LEVELS.SECONDARY,
     name: 'Yan Phelipe',
-    canRemoveAdmins: false
+    canRemoveAdmins: false,
+    canViewAllProviders: false,
+    canManageUsers: true,
+    canViewUserManagement: true
+  },
+  'contatomauriciosts@gmail.com': {
+    level: ADMIN_LEVELS.SECONDARY,
+    name: 'Mauricio Santos TS',
+    canRemoveAdmins: false,
+    canViewAllProviders: false,
+    canManageUsers: true,
+    canViewUserManagement: true
   }
 };
 
@@ -43,4 +57,22 @@ export const canRemoveAdmins = (email) => {
 export const isPrimaryAdmin = (email) => {
   const adminInfo = getAdminInfo(email);
   return adminInfo ? adminInfo.level === ADMIN_LEVELS.PRIMARY : false;
+};
+
+// Função para verificar se pode ver todos os provedores
+export const canViewAllProviders = (email) => {
+  const adminInfo = getAdminInfo(email);
+  return adminInfo ? adminInfo.canViewAllProviders : false;
+};
+
+// Função para verificar se pode gerenciar usuários
+export const canManageUsers = (email) => {
+  const adminInfo = getAdminInfo(email);
+  return adminInfo ? adminInfo.canManageUsers : false;
+};
+
+// Função para verificar se pode ver o painel de gerenciamento de usuários
+export const canViewUserManagement = (email) => {
+  const adminInfo = getAdminInfo(email);
+  return adminInfo ? adminInfo.canViewUserManagement : false;
 };
