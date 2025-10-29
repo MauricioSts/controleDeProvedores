@@ -9,7 +9,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import emailjs from "@emailjs/browser";
 import { EMAILJS_CONFIG, isEmailJSConfigured } from "../config/emailjs";
-import { sendEmailWithPDF, authenticateGmail } from "../utils/gmailSender";
+import { sendEmailWithPDF } from "../utils/gmailSender";
 
 // Componente simples para substituir window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -437,11 +437,6 @@ function DetalheProvedor() {
     }
 
     try {
-      // 1) Primeiro autentica (precisa acontecer imediatamente após o clique do usuário)
-      toast.info('Autenticando com Google...', { autoClose: 1500 });
-      await authenticateGmail(); // garante gesto do usuário antes de abrir popup
-
-      // 2) Depois gera o PDF e envia
       toast.info('Gerando PDF e preparando envio...', { autoClose: 2000 });
       
       // Gera o PDF em base64
@@ -477,7 +472,7 @@ function DetalheProvedor() {
       // Assunto do email
       const subject = `Relatório Mensal - ${previousMonth} ${reportYear} - ${provedor.razaoSocial || 'Provedor'}`;
       
-      toast.info('Enviando email...', { autoClose: 3000 });
+      toast.info('Autenticando com Google e enviando email...', { autoClose: 3000 });
       
       // Envia o email via Gmail API
       await sendEmailWithPDF(

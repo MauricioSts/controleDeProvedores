@@ -6,23 +6,15 @@
 import { GOOGLE_OAUTH_CONFIG } from '../config/googleOAuth';
 
 /**
- * Carrega o script do Google API Client
+ * Carrega o script do Google API
  * @returns {Promise<void>}
  */
 const loadGoogleAPI = () => {
   return new Promise((resolve, reject) => {
-    if (window.gapi && window.gapi.load) {
+    if (window.gapi) {
       resolve();
       return;
     }
-    
-    // Verifica se já existe um script carregando
-    const existingScript = document.querySelector('script[src="https://apis.google.com/js/api.js"]');
-    if (existingScript) {
-      existingScript.onload = () => resolve();
-      return;
-    }
-    
     const script = document.createElement('script');
     script.src = 'https://apis.google.com/js/api.js';
     script.async = true;
@@ -34,49 +26,21 @@ const loadGoogleAPI = () => {
 };
 
 /**
- * Carrega o script do Google Auth2
- * @returns {Promise<void>}
- */
-const loadGoogleAuth2 = () => {
-  return new Promise((resolve, reject) => {
-    if (window.gapi && window.gapi.auth2) {
-      resolve();
-      return;
-    }
-    
-    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-    if (existingScript) {
-      if (window.google && window.google.accounts) {
-        resolve();
-        return;
-      }
-      existingScript.onload = () => resolve();
-      return;
-    }
-    
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google && window.google.accounts) {
-        resolve();
-      } else {
-        reject(new Error('Google Auth2 não inicializado'));
-      }
-    };
-    script.onerror = () => reject(new Error('Erro ao carregar Google Auth2'));
-    document.head.appendChild(script);
-  });
-};
-
-/**
- * Inicializa o Google API Client usando a nova API
+ * Inicializa o Google API Client (gapi)
  * @returns {Promise<void>}
  */
 export const initGmailAPI = async () => {
   await loadGoogleAPI();
-  await loadGoogleAuth2();
+  return new Promise((resolve, reject) => {
+    window.gapi.load('client', async () => {
+      try {
+        await window.gapi.client.load('gmail', 'v1');
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
 };
 
 /**
@@ -86,68 +50,35 @@ export const initGmailAPI = async () => {
 export const authenticateGmail = async () => {
   try {
     await initGmailAPI();
-    
-    // Obtém a origem atual para usar como redirect URI
     const currentOrigin = window.location.origin;
-    
-    // Debug: mostra qual origem está sendo usada
-    console.log('🔍 Origem atual:', currentOrigin);
-    console.log('🔍 URL completa:', window.location.href);
-    
-    // Para Google Identity Services com popup, pode não precisar de redirect_uri explícito
-    // Vamos tentar sem primeiro, e usar postMessage
     return new Promise((resolve, reject) => {
-      // Usa a nova API do Google Identity Services
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_OAUTH_CONFIG.clientId,
         scope: GOOGLE_OAUTH_CONFIG.scopes.join(' '),
-        // Não especificar redirect_uri - Google Identity Services usa postMessage por padrão
-        // Isso resolve o problema de redirect_uri_mismatch
+        redirect_uri: currentOrigin,
         callback: (response) => {
-          console.log('📧 Resposta do OAuth:', response);
-          
           if (response.error) {
-            console.error('❌ Erro no OAuth:', response.error);
             if (response.error === 'popup_closed_by_user') {
               reject(new Error('Autenticação cancelada pelo usuário'));
-            } else if (response.error.includes('redirect_uri_mismatch')) {
-              reject(new Error(
-                `❌ Erro de configuração no Google Cloud Console!\n\n` +
-                `A origem atual é: ${currentOrigin}\n\n` +
-                `Configure no Google Cloud Console:\n` +
-                `1. Vá em: APIs & Services > Credentials\n` +
-                `2. Clique no seu OAuth 2.0 Client ID\n` +
-                `3. Em "Authorized JavaScript origins", adicione: ${currentOrigin}\n` +
-                `4. Em "Authorized redirect URIs", adicione: ${currentOrigin}\n` +
-                `5. Clique em "Save"\n\n` +
-                `⚠️ Use APENAS a origem (sem caminhos como /callback)`
-              ));
             } else {
               reject(new Error('Erro ao autenticar: ' + response.error));
             }
             return;
           }
           if (response.access_token) {
-            console.log('✅ Token obtido com sucesso!');
             resolve(response.access_token);
           } else {
             reject(new Error('Token de acesso não obtido'));
           }
         },
         error_callback: (error) => {
-          console.error('Erro no callback OAuth:', error);
           reject(new Error('Erro ao autenticar: ' + (error.message || 'Erro desconhecido')));
         }
       });
-      
-      // Solicita o token de acesso imediatamente, garantindo gesto do usuário
-      tokenClient.requestAccessToken({ prompt: '' });
+      tokenClient.requestAccessToken();
     });
   } catch (error) {
     console.error('Erro ao autenticar:', error);
-    if (error.message?.includes('popup') || error.message?.includes('cancelado')) {
-      throw new Error('Autenticação cancelada pelo usuário');
-    }
     throw error;
   }
 };
