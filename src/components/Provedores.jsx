@@ -61,77 +61,28 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
         return (
           <motion.div
             key={p.id}
-            initial={{ 
-              opacity: 0, 
-              y: 100, 
-              scale: 0.8,
-              rotateX: -15
-            }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
-              scale: 1,
-              rotateX: 0,
-              transition: {
-                duration: 0.6,
-                delay: searchTerm ? index * 0.05 : index * 0.15,
-                ease: [0.25, 0.46, 0.45, 0.94],
-                type: "spring",
-                stiffness: 120,
-                damping: 20
-              }
-            }}
-            layout
-            transition={{
-              layout: { duration: 0.4, ease: "easeInOut" }
-            }}
-            whileHover={{ 
-              y: -12, 
-              scale: 1.03,
-              rotateY: 5,
-              transition: { 
-                duration: 0.3,
-                ease: "easeOut"
-              }
-            }}
-            whileTap={{ 
-              scale: 0.95,
-              rotateY: -2
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            whileHover={{ y: -4 }}
             onClick={() => onCardClick && onCardClick(p.id)}
-            className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-xl 
-                       hover:shadow-cyan-500/30 hover:shadow-2xl transition-all duration-300 ease-in-out 
+            className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-cyan-500 shadow-lg 
+                       hover:shadow-xl hover:border-cyan-400 transition-all duration-200 
                        cursor-pointer relative"
           >
             {/* Bolinha amarela para irregularidades */}
             {temIrregularidade && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ 
-                  delay: index * 0.15 + 0.3,
-                  duration: 0.4,
-                  type: "spring",
-                  stiffness: 200
-                }}
-                className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full shadow-lg animate-pulse flex items-center justify-center"
+              <div
+                className="absolute top-3 right-3 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center"
                 title="Há informações irregulares"
               >
                 <span className="text-xs text-gray-900 font-bold">!</span>
-              </motion.div>
+              </div>
             )}
             
-            {/* Indicadores coloridos nos cantos superiores */}
-            <motion.div 
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ 
-                delay: index * 0.15 + 0.5,
-                duration: 0.4,
-                type: "spring",
-                stiffness: 200
-              }}
-              className={`absolute ${temIrregularidade ? 'top-3 left-3' : 'top-3 right-3'} w-4 h-4 rounded-full shadow-lg ${
+            {/* Indicador de status */}
+            <div 
+              className={`absolute ${temIrregularidade ? 'top-3 left-3' : 'top-3 right-3'} w-3 h-3 rounded-full ${
                 p.statusEmpresa?.toLowerCase() === 'ativa' || p.statusEmpresa?.toLowerCase() === 'ativo' 
                   ? 'bg-green-500' 
                   : p.statusEmpresa?.toLowerCase() === 'inativa' || p.statusEmpresa?.toLowerCase() === 'inativo'
@@ -139,130 +90,87 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                   : 'bg-gray-500'
               }`}
               title={`Status: ${p.statusEmpresa || 'N/A'}`}
-            ></motion.div>
-            {/* Título do Card em Light Blue (Cyan) */}
-            <motion.h3 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ 
-                delay: index * 0.15 + 0.3,
-                duration: 0.5
-              }}
-              className="text-xl font-bold mb-3 text-cyan-400 border-b border-gray-700 pb-2 break-words hyphens-auto leading-tight"
-              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-            >
-              {p.razaoSocial}
-            </motion.h3>
+            ></div>
+            {/* Título do Card - Altura fixa para alinhamento */}
+            <div className="h-16 mb-3 border-b border-gray-600 pb-2 overflow-hidden">
+              <h3 
+                className="text-xl font-bold text-cyan-400 leading-tight"
+                style={{ 
+                  wordBreak: 'break-word', 
+                  overflowWrap: 'break-word',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+                title={p.razaoSocial}
+              >
+                {p.razaoSocial}
+              </h3>
+            </div>
 
             {/* Conteúdo do Card */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                delay: index * 0.15 + 0.4,
-                duration: 0.6
-              }}
-              className="space-y-2 text-sm text-gray-300"
-            >
+            <div className="space-y-2">
               {/* Status Empresa com Badge */}
-              <p className="flex justify-between items-center text-base">
-                <span className="font-medium text-gray-100">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-gray-300">
                   Status Empresa:
-                </span>{" "}
+                </span>
                 <span
-                  className={`px-3 py-0.5 rounded-full text-xs font-semibold uppercase ${badgeBgClass}`}
+                  className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${badgeBgClass}`}
                 >
                   {p.statusEmpresa || "N/A"}
                 </span>
+              </div>
+
+              {/* CNPJ */}
+              <p className="text-sm pt-1 border-t border-gray-600/30">
+                <span className="font-medium text-gray-300">CNPJ:</span>{" "}
+                <span className="text-gray-300">{p.cnpj || "N/A"}</span>
               </p>
 
-              {/* Nº Fistel e Nº SCM */}
-              <p className="pt-2 border-t border-gray-700/50">
-                <span className="font-medium text-gray-200">Nº Fistel:</span>{" "}
-                {p.numeroFiscal || "N/A"}
-                <span className="mx-2 text-gray-500">|</span>
-                <span className="font-medium text-gray-200">Nº SCM:</span>{" "}
-                {p.numeroScm || "N/A"}
-              </p>
-
-              {/* Observações */}
-              <p className="pt-2 border-t border-gray-700/50">
-                <span className="font-medium text-gray-200">Observações:</span>
-                <span className="text-gray-500 italic ml-1 text-xs">
-                  {p.obs || "N/A"}
-                </span>
-              </p>
+              {/* Observações - sempre ocupa espaço para manter alinhamento */}
+              <div className="text-sm pt-1 border-t border-gray-600/30 min-h-[2.5rem]">
+                {p.obs && (
+                  <>
+                    <span className="font-medium text-gray-300">Observações:</span>
+                    <span className="text-gray-400 italic ml-1 text-xs block mt-1">
+                      {p.obs}
+                    </span>
+                  </>
+                )}
+              </div>
 
               {/* Representante Legal - apenas o nome */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  delay: index * 0.15 + 0.5,
-                  duration: 0.4
-                }}
-                className="pt-3 border-t border-purple-500/30"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <motion.span
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      opacity: [0.7, 1, 0.7]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                    className="text-purple-400"
-                  >
-                    👤
-                  </motion.span>
+              <div className="mt-3 pt-3 border-t border-gray-600/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-purple-400">👤</span>
                   <span className="font-semibold text-purple-400 text-sm">
                     Representante Legal
                   </span>
                 </div>
-                <p className="text-xs text-gray-300 ml-4">
+                <p className="text-sm text-gray-300 ml-6">
                   <span className="font-medium text-gray-200">Nome:</span>{" "}
                   {p.representanteLegal?.nomeCompleto || "N/A"}
                 </p>
-              </motion.div>
+              </div>
 
               {/* Responsável Técnico */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  delay: index * 0.15 + 0.6,
-                  duration: 0.4
-                }}
-                className="pt-3 border-t border-blue-500/30"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <motion.span
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      opacity: [0.7, 1, 0.7]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                    className="text-blue-400"
-                  >
-                    🔧
-                  </motion.span>
-                  <span className="font-semibold text-blue-400 text-sm">
+              <div className="mt-2 pt-3 border-t border-gray-600/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-cyan-400">🔧</span>
+                  <span className="font-semibold text-cyan-400 text-sm">
                     Responsável Técnico
                   </span>
                 </div>
-                <p className="text-xs text-gray-300 ml-4">
+                <p className="text-sm text-gray-300 ml-6">
                   <span className="font-medium text-gray-200">Nome:</span>{" "}
-                  {p.responsavelTecnico?.nomeCompleto || "N/A"}
+                  {p.councilInfo?.nome && p.councilInfo?.sobrenome 
+                    ? `${p.councilInfo.nome} ${p.councilInfo.sobrenome}`
+                    : p.councilInfo?.nome || "N/A"}
                 </p>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </motion.div>
         );
       })}

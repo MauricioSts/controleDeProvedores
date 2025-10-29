@@ -7,6 +7,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import emailjs from "@emailjs/browser";
+import { EMAILJS_CONFIG, isEmailJSConfigured } from "../config/emailjs";
 
 // Componente simples para substituir window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -73,18 +75,20 @@ function DetalheProvedor() {
       pdf.setFillColor(6, 182, 212); // Cyan
       pdf.rect(0, 0, 210, 30, 'F');
       
-      // Título principal com cor branca e mês
+      // Título principal com cor branca e mês (mês anterior)
       const now = new Date();
       const monthNames = [
         'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
       ];
-      const currentMonth = monthNames[now.getMonth()];
-      const currentYear = now.getFullYear();
+      // Calcular mês anterior
+      const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      const previousMonth = monthNames[previousMonthIndex];
+      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
       
       pdf.setFontSize(24);
       pdf.setTextColor(255, 255, 255);
-      pdf.text(`RELATORIO MENSAL - ${currentMonth} ${currentYear}`, 105, 20, { align: 'center' });
+      pdf.text(`RELATORIO MENSAL - ${previousMonth} ${reportYear}`, 105, 20, { align: 'center' });
       
       // Linha separadora
       pdf.setDrawColor(255, 255, 255);
@@ -92,26 +96,7 @@ function DetalheProvedor() {
       
       let yPosition = 45;
       
-      
-      // Informações do CFT com design melhorado
-      pdf.setFillColor(31, 41, 55); // Gray-800
-      pdf.roundedRect(20, yPosition, 170, 35, 5, 5, 'F');
-      
-      pdf.setTextColor(6, 182, 212);
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('CONSELHO FEDERAL', 25, yPosition + 10);
-      
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
-      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
-      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
-      
-      yPosition += 45;
-      
-      // Informações do Provedor com design melhorado
+      // 1. PRIMEIRO: Informações da Empresa (Provedor)
       pdf.setFillColor(6, 182, 212);
       pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
@@ -127,8 +112,7 @@ function DetalheProvedor() {
         { label: 'Regime', value: provedor.regime || 'N/A' },
         { label: 'N Fistel', value: provedor.numeroFiscal || 'N/A' },
         { label: 'N SCM', value: provedor.numeroScm || 'N/A' },
-        { label: 'Status da Empresa', value: provedor.statusEmpresa || 'N/A' },
-        { label: 'Processo Anatel', value: provedor.processoAnatel || 'N/A' }
+        { label: 'Status da Empresa', value: provedor.statusEmpresa || 'N/A' }
       ];
       
       basicInfo.forEach((info, index) => {
@@ -157,7 +141,31 @@ function DetalheProvedor() {
         yPosition = 20;
       }
       
-      // Informações Regulatórias com design melhorado
+      // 2. SEGUNDO: Informações do Conselho Federal
+      pdf.setFillColor(31, 41, 55); // Gray-800
+      pdf.roundedRect(20, yPosition, 170, 35, 5, 5, 'F');
+      
+      pdf.setTextColor(6, 182, 212);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CONSELHO FEDERAL', 25, yPosition + 10);
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
+      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
+      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
+      
+      yPosition += 45;
+      
+      // Verificar se precisa de nova página
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // 3. TERCEIRO: Informações Regulatórias Anatel
       pdf.setFillColor(6, 182, 212);
       pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
@@ -167,6 +175,7 @@ function DetalheProvedor() {
       yPosition += 20;
       
       const regulatoryInfo = [
+        { label: 'Processo Anatel', value: provedor.processoAnatel || 'N/A' },
         { label: 'Situacao CNPJ Anatel', value: provedor.cnpjAnatel || 'N/A' },
         { label: 'Situacao Anatel/Ancine', value: provedor.situacaoAnatel || 'N/A' },
         { label: 'FUST', value: provedor.fust || 'N/A' },
@@ -244,6 +253,186 @@ function DetalheProvedor() {
     }
   };
 
+  // Função para gerar PDF em base64 (para envio por email)
+  const generatePDFBase64 = async (provedor) => {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.setFont('helvetica');
+      
+      // Cabeçalho com gradiente simulado
+      pdf.setFillColor(6, 182, 212);
+      pdf.rect(0, 0, 210, 30, 'F');
+      
+      // Título principal com cor branca e mês (mês anterior)
+      const now = new Date();
+      const monthNames = [
+        'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      const previousMonth = monthNames[previousMonthIndex];
+      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      
+      pdf.setFontSize(24);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`RELATORIO MENSAL - ${previousMonth} ${reportYear}`, 105, 20, { align: 'center' });
+      
+      pdf.setDrawColor(255, 255, 255);
+      pdf.line(20, 35, 190, 35);
+      
+      let yPosition = 45;
+      
+      // 1. PRIMEIRO: Informações da Empresa (Provedor)
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('INFORMACOES DO PROVEDOR', 25, yPosition + 5);
+      yPosition += 20;
+      
+      const basicInfo = [
+        { label: 'Razao Social', value: provedor.razaoSocial || 'N/A' },
+        { label: 'CNPJ', value: provedor.cnpj || 'N/A' },
+        { label: 'Regime', value: provedor.regime || 'N/A' },
+        { label: 'N Fistel', value: provedor.numeroFiscal || 'N/A' },
+        { label: 'N SCM', value: provedor.numeroScm || 'N/A' },
+        { label: 'Status da Empresa', value: provedor.statusEmpresa || 'N/A' }
+      ];
+      
+      basicInfo.forEach((info, index) => {
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(20, yPosition - 3, 170, 8, 'F');
+        }
+        
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${info.label}:`, 25, yPosition + 3);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(info.value, 80, yPosition + 3);
+        yPosition += 8;
+      });
+      
+      yPosition += 10;
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // 2. SEGUNDO: Informações do Conselho Federal
+      pdf.setFillColor(31, 41, 55);
+      pdf.roundedRect(20, yPosition, 170, 35, 5, 5, 'F');
+      pdf.setTextColor(6, 182, 212);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CONSELHO FEDERAL', 25, yPosition + 10);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
+      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
+      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
+      yPosition += 45;
+      
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // 3. TERCEIRO: Informações Regulatórias Anatel
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('INFORMACOES REGULATORIAS ANATEL', 25, yPosition + 5);
+      yPosition += 20;
+      
+      const regulatoryInfo = [
+        { label: 'Processo Anatel', value: provedor.processoAnatel || 'N/A' },
+        { label: 'Situacao CNPJ Anatel', value: provedor.cnpjAnatel || 'N/A' },
+        { label: 'Situacao Anatel/Ancine', value: provedor.situacaoAnatel || 'N/A' },
+        { label: 'FUST', value: provedor.fust || 'N/A' },
+        { label: 'Coleta de Dados Mensal', value: provedor.coletaDeDadosM || 'N/A' },
+        { label: 'Coleta de Dados Economicos', value: provedor.coletaDeDadosEconomicos || 'N/A' },
+        { label: 'Dados de Infraestrutura', value: provedor.dadosInfra || 'N/A' },
+        { label: 'Registro de Estacoes', value: provedor.registroEstacoes || 'N/A' }
+      ];
+      
+      regulatoryInfo.forEach((info, index) => {
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(20, yPosition - 3, 170, 8, 'F');
+        }
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${info.label}:`, 25, yPosition + 3);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(info.value, 80, yPosition + 3);
+        yPosition += 8;
+      });
+      
+      yPosition += 10;
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // Observações
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('OBSERVACOES', 25, yPosition + 5);
+      yPosition += 20;
+      
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(20, yPosition - 3, 170, 20, 3, 3, 'F');
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const obsText = provedor.obs || 'Nenhuma observação registrada';
+      const splitObs = pdf.splitTextToSize(obsText, 160);
+      pdf.text(splitObs, 25, yPosition + 3);
+      
+      // Rodapé
+      const pageHeight = pdf.internal.pageSize.height;
+      pdf.setFillColor(31, 41, 55);
+      pdf.rect(0, pageHeight - 20, 210, 20, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, pageHeight - 10);
+      pdf.text('Sistema de Controle de Provedores', 105, pageHeight - 10, { align: 'center' });
+      pdf.text('contato@sistema.com', 190, pageHeight - 10, { align: 'right' });
+      
+      // Converter PDF para base64
+      const pdfBlob = pdf.output('blob');
+      const reader = new FileReader();
+      
+      return new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          resolve(base64data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      throw error;
+    }
+  };
+
+  // Função para enviar relatório por email
+  const sendReportByEmail = async () => {
+    toast.info('to trabalhando nisso');
+  };
+
   useEffect(() => {
     const fetchProvedor = async () => {
       if (!userId) return;
@@ -293,6 +482,11 @@ function DetalheProvedor() {
     if (lowerValue === "irregular" || lowerValue === "inativa") {
       // Inativo/Irregular: Vermelho
       return "border-red-500 bg-red-900/40 text-red-400 focus:ring-red-500";
+    }
+
+    if (lowerValue === "nao-informado" || lowerValue === "nao informado") {
+      // Não informado: Amarelo
+      return "border-yellow-500 bg-yellow-900/40 text-yellow-400 focus:ring-yellow-500";
     }
 
     // Default para outros (suspensa, em-analise)
@@ -526,7 +720,7 @@ function DetalheProvedor() {
             ["cnpj", "CNPJ", "text"],
             ["numeroFiscal", "Nº Fistel", "number"],
             ["numeroScm", "Nº SCM", "number"],
-            ["processoAnatel", "Processo Anatel", "text"],
+            ["emailContato", "Email de Contato", "email"],
           ].map(([campo, label, type], index) => (
             <motion.div
               key={campo}
@@ -758,9 +952,31 @@ function DetalheProvedor() {
                     </option>
                     <option value="regular">Regular</option>
                     <option value="irregular">Irregular</option>
+                    <option value="nao-informado">Não informado</option>
                   </select>
                 </div>
               ))}
+            </div>
+            
+            {/* Campo de Processos Anatel */}
+            <div className="mt-4">
+              <label className="block font-semibold text-gray-300 mb-1 text-sm">
+                Processos Anatel
+              </label>
+              <textarea
+                value={provedor.processoAnatel || ""}
+                disabled={!editando}
+                onChange={(e) =>
+                  setProvedor({ ...provedor, processoAnatel: e.target.value })
+                }
+                placeholder="Digite os números dos processos Anatel (separados por vírgula ou quebra de linha)"
+                rows="3"
+                className={`w-full border border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500 transition ${
+                  !editando
+                    ? "bg-gray-700 cursor-not-allowed text-gray-400"
+                    : "bg-gray-900 text-gray-200"
+                }`}
+              />
             </div>
           </div>
 
@@ -817,6 +1033,17 @@ function DetalheProvedor() {
             className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:from-green-500 hover:to-emerald-500 transition transform hover:scale-105"
           >
             📄 Gerar PDF
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={sendReportByEmail}
+            disabled={!provedor.emailContato}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:from-blue-500 hover:to-indigo-500 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            title={!provedor.emailContato ? 'Email de contato não cadastrado' : 'Enviar relatório por email'}
+          >
+            📧 Enviar Relatório
           </motion.button>
 
           <motion.button

@@ -12,6 +12,7 @@ function AddProvedor({ handleAddProvedor }) {
   const [numeroFiscal, setNumeroFiscal] = useState("");
   const [numeroScm, setNumeroScm] = useState("");
   const [statusEmpresa, setStatusEmpresa] = useState("");
+  const [emailContato, setEmailContato] = useState("");
   const [cnpjAnatel, setCnpjAnatel] = useState("");
   const [situacaoAnatel, setSituacaoAnatel] = useState("");
   const [fust, setFust] = useState("");
@@ -69,12 +70,23 @@ function AddProvedor({ handleAddProvedor }) {
     
     return Object.keys(newErrors).length === 0;
   };
-  const situacaoClass = (value) =>
-    value
-      ? value === "regular"
-        ? "border-green-700 bg-green-900/40 text-green-300"
-        : "border-red-700 bg-red-900/40 text-red-300"
-      : "border-gray-600 bg-gray-700 text-gray-300"; // Default para estado vazio
+  const situacaoClass = (value) => {
+    if (!value) return "border-gray-600 bg-gray-700 text-gray-300"; // Default para estado vazio
+    
+    if (value === "regular") {
+      return "border-green-700 bg-green-900/40 text-green-300";
+    }
+    
+    if (value === "irregular") {
+      return "border-red-700 bg-red-900/40 text-red-300";
+    }
+    
+    if (value === "nao-informado") {
+      return "border-yellow-700 bg-yellow-900/40 text-yellow-300";
+    }
+    
+    return "border-gray-600 bg-gray-700 text-gray-300"; // Default
+  };
 
   // Função específica para status da empresa
   const statusEmpresaClass = (value) => {
@@ -110,6 +122,7 @@ function AddProvedor({ handleAddProvedor }) {
         numeroFiscal,
         numeroScm,
         statusEmpresa,
+        emailContato,
         cnpjAnatel,
         situacaoAnatel,
         fust,
@@ -142,6 +155,7 @@ function AddProvedor({ handleAddProvedor }) {
       setNumeroFiscal("");
       setNumeroScm("");
       setStatusEmpresa("");
+      setEmailContato("");
       setCnpjAnatel("");
       setSituacaoAnatel("");
       setFust("");
@@ -198,115 +212,195 @@ function AddProvedor({ handleAddProvedor }) {
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Mapeamento dos campos básicos - seguindo o padrão do DetalheProvedor */}
-          {[
-            ["razaoSocial", "Razão Social", "text"],
-            ["cnpj", "CNPJ", "text"],
-            ["numeroFiscal", "Nº Fistel", "number"],
-            ["numeroScm", "Nº SCM", "number"],
-          ].map(([campo, label, type], index) => (
-            <motion.div 
-              key={campo}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-              whileInView={{
-                x: (campo === "razaoSocial" && shakeFields.razaoSocial) || (campo === "cnpj" && shakeFields.cnpj) 
-                  ? [0, -10, 10, -10, 10, 0] 
-                  : 0
-              }}
-              transition={{
-                x: { duration: 0.5, ease: "easeInOut" }
-              }}
-            >
-              <label className="block font-semibold text-gray-300 mb-1">
-                {label}
-              </label>
-              <input
-                type={type}
-                value={campo === "razaoSocial" ? razaoSocial : 
-                       campo === "cnpj" ? cnpj :
-                       campo === "numeroFiscal" ? numeroFiscal :
-                       campo === "numeroScm" ? numeroScm : ""}
-                onChange={(e) => {
-                  if (campo === "razaoSocial") {
+          {/* Seção Cadastrar Empresa - Card estilizado */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="col-span-2 mb-6 p-6 bg-gray-700/50 rounded-xl border-l-4 border-cyan-500"
+          >
+            <h3 className="text-2xl font-bold text-cyan-400 mb-6 border-b border-gray-600 pb-2">
+              Cadastrar Empresa
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Razão Social */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileInView={{
+                  x: shakeFields.razaoSocial ? [0, -10, 10, -10, 10, 0] : 0
+                }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.5,
+                  x: { duration: 0.5, ease: "easeInOut" }
+                }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Razão Social
+                </label>
+                <input
+                  type="text"
+                  value={razaoSocial}
+                  onChange={(e) => {
                     setRazaoSocial(e.target.value);
                     if (errors.razaoSocial) {
                       setErrors(prev => ({ ...prev, razaoSocial: false }));
                     }
-                  }
-                  else if (campo === "cnpj") {
+                  }}
+                  placeholder="Digite a razão social"
+                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
+                    errors.razaoSocial
+                      ? "border-red-500 bg-red-900/20 text-red-200"
+                      : "border-gray-700 bg-gray-900 text-gray-200"
+                  } ${
+                    shakeFields.razaoSocial ? "animate-pulse" : ""
+                  }`}
+                />
+              </motion.div>
+
+              {/* CNPJ */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileInView={{
+                  x: shakeFields.cnpj ? [0, -10, 10, -10, 10, 0] : 0
+                }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.6,
+                  x: { duration: 0.5, ease: "easeInOut" }
+                }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  CNPJ
+                </label>
+                <input
+                  type="text"
+                  value={cnpj}
+                  onChange={(e) => {
                     setCnpj(e.target.value);
                     if (errors.cnpj) {
                       setErrors(prev => ({ ...prev, cnpj: false }));
                     }
-                  }
-                  else if (campo === "numeroFiscal") setNumeroFiscal(e.target.value);
-                  else if (campo === "numeroScm") setNumeroScm(e.target.value);
-                }}
-                placeholder={`Digite ${label.toLowerCase()}`}
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
-                  (campo === "razaoSocial" && errors.razaoSocial) || (campo === "cnpj" && errors.cnpj)
-                    ? "border-red-500 bg-red-900/20 text-red-200"
-                    : "border-gray-700 bg-gray-900 text-gray-200"
-                } ${
-                  (campo === "razaoSocial" && shakeFields.razaoSocial) || (campo === "cnpj" && shakeFields.cnpj)
-                    ? "animate-pulse"
-                    : ""
-                }`}
-              />
-            </motion.div>
-          ))}
+                  }}
+                  placeholder="Digite o CNPJ"
+                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
+                    errors.cnpj
+                      ? "border-red-500 bg-red-900/20 text-red-200"
+                      : "border-gray-700 bg-gray-900 text-gray-200"
+                  } ${
+                    shakeFields.cnpj ? "animate-pulse" : ""
+                  }`}
+                />
+              </motion.div>
 
-          {/* Regime (Select) - seguindo o padrão do DetalheProvedor */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1.1 }}
-          >
-            <label className="block font-semibold text-gray-300 mb-1">
-              Regime
-            </label>
-            <select
-              value={regime}
-              onChange={(e) => setRegime(e.target.value)}
-              className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
-            >
-              <option value="" disabled>
-                Selecione o regime
-              </option>
-              <option value="Simples Nacional">Simples Nacional</option>
-              <option value="Lucro Presumido">Lucro Presumido</option>
-              <option value="Lucro Real">Lucro Real</option>
-              <option value="ME">ME</option>
-              <option value="SE">SE</option>
-            </select>
-          </motion.div>
+              {/* Nº Fistel */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Nº Fistel
+                </label>
+                <input
+                  type="number"
+                  value={numeroFiscal}
+                  onChange={(e) => setNumeroFiscal(e.target.value)}
+                  placeholder="Digite o Nº Fistel"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                />
+              </motion.div>
 
-          {/* Status Empresa (Select) - seguindo o padrão do DetalheProvedor */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1.2 }}
-          >
-            <label className="block font-semibold text-gray-300 mb-1">
-              Status da Empresa
-            </label>
-            <select
-              value={statusEmpresa}
-              onChange={(e) => setStatusEmpresa(e.target.value)}
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${statusEmpresaClass(
-                statusEmpresa
-              )} bg-gray-900`}
-            >
-              <option value="" disabled>
-                Selecione o status
-              </option>
-              <option value="ativa">Ativa</option>
-              <option value="inativa">Inativa</option>
-              <option value="suspensa">Suspensa</option>
-              <option value="em-analise">Em Análise</option>
-            </select>
+              {/* Nº SCM */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Nº SCM
+                </label>
+                <input
+                  type="number"
+                  value={numeroScm}
+                  onChange={(e) => setNumeroScm(e.target.value)}
+                  placeholder="Digite o Nº SCM"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                />
+              </motion.div>
+
+              {/* Regime */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Regime
+                </label>
+                <select
+                  value={regime}
+                  onChange={(e) => setRegime(e.target.value)}
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                >
+                  <option value="" disabled>
+                    Selecione o regime
+                  </option>
+                  <option value="Simples Nacional">Simples Nacional</option>
+                  <option value="Lucro Presumido">Lucro Presumido</option>
+                  <option value="Lucro Real">Lucro Real</option>
+                  <option value="ME">ME</option>
+                  <option value="SE">SE</option>
+                </select>
+              </motion.div>
+
+              {/* Status Empresa */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.0 }}
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Status da Empresa
+                </label>
+                <select
+                  value={statusEmpresa}
+                  onChange={(e) => setStatusEmpresa(e.target.value)}
+                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${statusEmpresaClass(
+                    statusEmpresa
+                  )} bg-gray-900`}
+                >
+                  <option value="" disabled>
+                    Selecione o status
+                  </option>
+                  <option value="ativa">Ativa</option>
+                  <option value="inativa">Inativa</option>
+                  <option value="suspensa">Suspensa</option>
+                  <option value="em-analise">Em Análise</option>
+                </select>
+              </motion.div>
+
+              {/* Email de Contato */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.1 }}
+                className="col-span-2"
+              >
+                <label className="block font-semibold text-gray-300 mb-1">
+                  Email de Contato
+                </label>
+                <input
+                  type="email"
+                  value={emailContato}
+                  onChange={(e) => setEmailContato(e.target.value)}
+                  placeholder="Digite o email de contato"
+                  className="w-full border border-gray-700 bg-gray-900 text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                />
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* Seção Representante Legal - MOVIDA PARA ACIMA DO CONSELHO FEDERAL */}
@@ -324,11 +418,12 @@ function AddProvedor({ handleAddProvedor }) {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
                 whileInView={{
                   x: shakeFields.nomeCompleto ? [0, -10, 10, -10, 10, 0] : 0
                 }}
                 transition={{
+                  duration: 0.5,
+                  delay: 0.5,
                   x: { duration: 0.5, ease: "easeInOut" }
                 }}
               >
@@ -394,11 +489,12 @@ function AddProvedor({ handleAddProvedor }) {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.8 }}
                 whileInView={{
                   x: shakeFields.cpf ? [0, -10, 10, -10, 10, 0] : 0
                 }}
                 transition={{
+                  duration: 0.5,
+                  delay: 0.8,
                   x: { duration: 0.5, ease: "easeInOut" }
                 }}
               >
@@ -646,6 +742,7 @@ function AddProvedor({ handleAddProvedor }) {
                     </option>
                     <option value="regular">Regular</option>
                     <option value="irregular">Irregular</option>
+                    <option value="nao-informado">Não informado</option>
                   </select>
                 </motion.div>
               ))}

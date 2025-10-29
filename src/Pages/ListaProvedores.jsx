@@ -53,18 +53,20 @@ function ListaProvedores({ lista }) {
       pdf.setFillColor(6, 182, 212); // Cyan
       pdf.rect(0, 0, 210, 30, 'F');
       
-      // Título principal com cor branca e mês
+      // Título principal com cor branca e mês (mês anterior)
       const now = new Date();
       const monthNames = [
         'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
       ];
-      const currentMonth = monthNames[now.getMonth()];
-      const currentYear = now.getFullYear();
+      // Calcular mês anterior
+      const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      const previousMonth = monthNames[previousMonthIndex];
+      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
       
       pdf.setFontSize(24);
       pdf.setTextColor(255, 255, 255);
-      pdf.text(`RELATORIO MENSAL - ${currentMonth} ${currentYear}`, 105, 20, { align: 'center' });
+      pdf.text(`RELATORIO MENSAL - ${previousMonth} ${reportYear}`, 105, 20, { align: 'center' });
       
       // Linha separadora
       pdf.setDrawColor(255, 255, 255);
@@ -72,26 +74,7 @@ function ListaProvedores({ lista }) {
       
       let yPosition = 45;
       
-      
-      // Informações do CFT com design melhorado
-      pdf.setFillColor(31, 41, 55); // Gray-800
-      pdf.roundedRect(20, yPosition, 170, 35, 5, 5, 'F');
-      
-      pdf.setTextColor(6, 182, 212);
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('CONSELHO FEDERAL', 25, yPosition + 10);
-      
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
-      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
-      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
-      
-      yPosition += 45;
-      
-      // Informações do Provedor com design melhorado
+      // 1. PRIMEIRO: Informações da Empresa (Provedor)
       pdf.setFillColor(6, 182, 212);
       pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
@@ -107,8 +90,7 @@ function ListaProvedores({ lista }) {
         { label: 'Regime', value: provedor.regime || 'N/A' },
         { label: 'N Fistel', value: provedor.numeroFiscal || 'N/A' },
         { label: 'N SCM', value: provedor.numeroScm || 'N/A' },
-        { label: 'Status da Empresa', value: provedor.statusEmpresa || 'N/A' },
-        { label: 'Processo Anatel', value: provedor.processoAnatel || 'N/A' }
+        { label: 'Status da Empresa', value: provedor.statusEmpresa || 'N/A' }
       ];
       
       basicInfo.forEach((info, index) => {
@@ -137,7 +119,31 @@ function ListaProvedores({ lista }) {
         yPosition = 20;
       }
       
-      // Informações Regulatórias com design melhorado
+      // 2. SEGUNDO: Informações do Conselho Federal
+      pdf.setFillColor(31, 41, 55); // Gray-800
+      pdf.roundedRect(20, yPosition, 170, 35, 5, 5, 'F');
+      
+      pdf.setTextColor(6, 182, 212);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CONSELHO FEDERAL', 25, yPosition + 10);
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Registro no CFT: Regular com Responsável Técnico', 25, yPosition + 18);
+      pdf.text(`Responsável Técnico: ${provedor.councilInfo?.nome || ''} ${provedor.councilInfo?.sobrenome || ''}`, 25, yPosition + 25);
+      pdf.text(`Processos CFT: ${provedor.councilInfo?.processosCft || 'N/A'}`, 25, yPosition + 32);
+      
+      yPosition += 45;
+      
+      // Verificar se precisa de nova página
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // 3. TERCEIRO: Informações Regulatórias Anatel
       pdf.setFillColor(6, 182, 212);
       pdf.roundedRect(20, yPosition - 5, 170, 15, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
@@ -147,6 +153,7 @@ function ListaProvedores({ lista }) {
       yPosition += 20;
       
       const regulatoryInfo = [
+        { label: 'Processo Anatel', value: provedor.processoAnatel || 'N/A' },
         { label: 'Situacao CNPJ Anatel', value: provedor.cnpjAnatel || 'N/A' },
         { label: 'Situacao Anatel/Ancine', value: provedor.situacaoAnatel || 'N/A' },
         { label: 'FUST', value: provedor.fust || 'N/A' },
