@@ -6,76 +6,107 @@
 import { GOOGLE_OAUTH_CONFIG } from '../config/googleOAuth';
 
 /**
- * Carrega o script do Google API
+ * Carrega o script do Google Identity Services
  * @returns {Promise<void>}
  */
 const loadGoogleAPI = () => {
   return new Promise((resolve, reject) => {
-    if (window.gapi) {
+    // Se já está carregado, resolve imediatamente
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
       resolve();
       return;
     }
+    
+    // Verifica se já existe um script carregando
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existingScript) {
+      // Espera o script carregar
+      existingScript.onload = () => {
+        if (window.google && window.google.accounts) {
+          resolve();
+        } else {
+          reject(new Error('Google Identity Services não inicializado'));
+        }
+      };
+      existingScript.onerror = () => reject(new Error('Erro ao carregar Google Identity Services'));
+      return;
+    }
+    
+    // Cria e adiciona o script
     const script = document.createElement('script');
-    script.src = 'https://apis.google.com/js/api.js';
+    script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Erro ao carregar Google API'));
+    script.onload = () => {
+      // Aguarda um pouco para garantir que está inicializado
+      setTimeout(() => {
+        if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+          resolve();
+        } else {
+          reject(new Error('Google Identity Services não inicializado após carregamento'));
+        }
+      }, 100);
+    };
+    script.onerror = () => reject(new Error('Erro ao carregar Google Identity Services'));
     document.head.appendChild(script);
   });
 };
 
 /**
- * Inicializa o Google API Client (gapi)
+ * Inicializa o Google API Client
  * @returns {Promise<void>}
  */
 export const initGmailAPI = async () => {
   await loadGoogleAPI();
-  return new Promise((resolve, reject) => {
-    window.gapi.load('client', async () => {
-      try {
-        await window.gapi.client.load('gmail', 'v1');
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
 };
 
 /**
- * Autentica o usuário usando a nova Google Identity Services
+ * Autentica o usuário usando Google Identity Services
  * @returns {Promise<string>} Token de acesso
  */
 export const authenticateGmail = async () => {
   try {
     await initGmailAPI();
+    
+    // Verifica se está disponível
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+      throw new Error('Google Identity Services não está disponível');
+    }
+    
     const currentOrigin = window.location.origin;
+    
     return new Promise((resolve, reject) => {
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_OAUTH_CONFIG.clientId,
-        scope: GOOGLE_OAUTH_CONFIG.scopes.join(' '),
-        redirect_uri: currentOrigin,
-        callback: (response) => {
-          if (response.error) {
-            if (response.error === 'popup_closed_by_user') {
-              reject(new Error('Autenticação cancelada pelo usuário'));
-            } else {
-              reject(new Error('Erro ao autenticar: ' + response.error));
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_OAUTH_CONFIG.clientId,
+          scope: GOOGLE_OAUTH_CONFIG.scopes.join(' '),
+          redirect_uri: currentOrigin,
+          callback: (response) => {
+            if (response.error) {
+              if (response.error === 'popup_closed_by_user') {
+                reject(new Error('Autenticação cancelada pelo usuário'));
+              } else {
+                reject(new Error('Erro ao autenticar: ' + response.error));
+              }
+              return;
             }
-            return;
+            if (response.access_token) {
+              resolve(response.access_token);
+            } else {
+              reject(new Error('Token de acesso não obtido'));
+            }
+          },
+          error_callback: (error) => {
+            console.error('Erro no callback OAuth:', error);
+            reject(new Error('Erro ao autenticar: ' + (error.message || 'Erro desconhecido')));
           }
-          if (response.access_token) {
-            resolve(response.access_token);
-          } else {
-            reject(new Error('Token de acesso não obtido'));
-          }
-        },
-        error_callback: (error) => {
-          reject(new Error('Erro ao autenticar: ' + (error.message || 'Erro desconhecido')));
-        }
-      });
-      tokenClient.requestAccessToken();
+        });
+        
+        tokenClient.requestAccessToken();
+      } catch (error) {
+        console.error('Erro ao criar tokenClient:', error);
+        reject(new Error('Erro ao inicializar autenticação: ' + error.message));
+      }
     });
   } catch (error) {
     console.error('Erro ao autenticar:', error);
@@ -196,4 +227,3 @@ export const sendEmailWithPDF = async (to, subject, body, pdfBase64, pdfFileName
     throw error;
   }
 };
-
