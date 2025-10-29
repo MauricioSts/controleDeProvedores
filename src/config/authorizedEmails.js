@@ -11,7 +11,7 @@ export const isEmailAuthorized = (email) => {
   return AUTHORIZED_EMAILS.includes(email.toLowerCase().trim());
 };
 
-// Função para obter a lista de emails autorizados (para exibição)
+// Função para obter a lista de emails autorizados (para exibição) 
 export const getAuthorizedEmails = () => {
   return AUTHORIZED_EMAILS;
 };

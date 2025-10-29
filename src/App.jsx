@@ -102,6 +102,7 @@ function AppContent() {
         numeroFiscal: provedor.numeroFiscal,
         numeroScm: provedor.numeroScm,
         statusEmpresa: provedor.statusEmpresa,
+        emailContato: provedor.emailContato,
         cnpjAnatel: provedor.cnpjAnatel,
         situacaoAnatel: provedor.situacaoAnatel,
         fust: provedor.fust,

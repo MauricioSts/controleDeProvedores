@@ -9,6 +9,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import emailjs from "@emailjs/browser";
 import { EMAILJS_CONFIG, isEmailJSConfigured } from "../config/emailjs";
+import { sendEmailWithPDF } from "../utils/gmailSender";
 
 // Componente simples para substituir window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -428,9 +429,65 @@ function DetalheProvedor() {
     }
   };
 
-  // Função para enviar relatório por email
+  // Função para enviar relatório por email via Gmail API
   const sendReportByEmail = async () => {
-    toast.info('to trabalhando nisso');
+    if (!provedor.emailContato) {
+      toast.error('Email de contato não cadastrado');
+      return;
+    }
+
+    try {
+      toast.info('Gerando PDF e preparando envio...', { autoClose: 2000 });
+      
+      // Gera o PDF em base64
+      const pdfBase64 = await generatePDFBase64(provedor);
+      
+      // Calcula mês anterior para o assunto
+      const now = new Date();
+      const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      const previousMonth = monthNames[previousMonthIndex];
+      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      
+      // Nome do arquivo PDF
+      const pdfFileName = `relatorio_${provedor.razaoSocial?.replace(/\s+/g, '_') || 'provedor'}.pdf`;
+      
+      // Corpo do email em HTML
+      const emailBody = `
+        <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #06b6d4;">Relatório Mensal de Provedor</h2>
+            <p>Olá,</p>
+            <p>Segue em anexo o relatório mensal de <strong>${previousMonth} ${reportYear}</strong> referente à empresa <strong>${provedor.razaoSocial || 'Provedor'}</strong>.</p>
+            <p>O relatório contém todas as informações regulatórias e atualizações necessárias.</p>
+            <br>
+          
+          </body>
+        </html>
+      `;
+      
+      // Assunto do email
+      const subject = `Relatório Mensal - ${previousMonth} ${reportYear} - ${provedor.razaoSocial || 'Provedor'}`;
+      
+      toast.info('Autenticando com Google e enviando email...', { autoClose: 3000 });
+      
+      // Envia o email via Gmail API
+      await sendEmailWithPDF(
+        provedor.emailContato,
+        subject,
+        emailBody,
+        pdfBase64,
+        pdfFileName
+      );
+      
+      toast.success(`Relatório enviado com sucesso para ${provedor.emailContato}! 📧`);
+    } catch (error) {
+      console.error('Erro ao enviar relatório:', error);
+      toast.error(error.message || 'Erro ao enviar relatório por email. Tente novamente.');
+    }
   };
 
   useEffect(() => {
