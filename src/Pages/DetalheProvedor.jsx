@@ -459,7 +459,7 @@ function DetalheProvedor() {
       const emailBody = `
         <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <h2 style="color: #06b6d4;">Relatório Mensal de Provedor</h2>
+            <h2 style="color: #06b6d4;">Relatório Mensal</h2>
             <p>Olá,</p>
             <p>Segue em anexo o relatório mensal de <strong>${previousMonth} ${reportYear}</strong> referente à empresa <strong>${provedor.razaoSocial || 'Provedor'}</strong>.</p>
             <p>O relatório contém todas as informações regulatórias e atualizações necessárias.</p>
