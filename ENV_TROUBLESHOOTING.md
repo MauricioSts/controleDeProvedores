@@ -13,9 +13,11 @@ Se o erro começou **depois de criar o .env**, pode ser que:
 Seu arquivo `.env` na **raiz do projeto** deve ter exatamente este formato:
 
 ```env
-VITE_GOOGLE_CLIENT_ID=184171118487-0plj2f7odi8v40pvfmj0vi8vjlca9bhi.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_SECRET=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
+VITE_GOOGLE_CLIENT_ID=seu_client_id_aqui
+VITE_GOOGLE_CLIENT_SECRET=seu_client_secret_aqui
 ```
+
+**Substitua pelos valores reais que você obteve no Google Cloud Console.**
 
 ### ❌ Erros Comuns:
 
@@ -57,10 +59,10 @@ VITE_GOOGLE_CLIENT_SECRET=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
    - Você deve ver: `🔑 Client ID carregado: ✅ Sim`
    - Se aparecer `❌ Não`, as variáveis não estão sendo carregadas
 
-3. **Se não funcionar, use o fallback:**
-   - O código agora tem valores de fallback hardcoded
-   - Mesmo sem .env, deve funcionar
-   - Você verá um aviso: `⚠️ Usando fallback hardcoded`
+3. **Se não funcionar:**
+   - Verifique se o arquivo `.env` está na raiz do projeto
+   - Confirme que as variáveis começam com `VITE_`
+   - Reinicie o servidor após qualquer alteração no `.env`
 
 ## 🎯 Verificar se Está Funcionando
 
@@ -76,23 +78,24 @@ Se aparecer `✅ Sim`, está correto!
 
 ## 🚨 Se Ainda Não Funcionar
 
-### Opção 1: Remover o .env temporariamente
-- Delete ou renomeie o arquivo `.env`
-- O código usará os valores de fallback
-- Reinicie o servidor
-
-### Opção 2: Verificar arquivo .env
+### Opção 1: Verificar arquivo .env
 - Abra o `.env` em um editor de texto simples
 - Confirme que não há espaços extras
+- Confirme que os valores estão corretos
 - Salve novamente
 - Reinicie o servidor
 
-### Opção 3: Criar .env novamente
+### Opção 2: Criar .env novamente
 1. Delete o `.env` atual
 2. Copie o conteúdo de `.env.example`
 3. Cole em um novo arquivo `.env`
-4. Salve
-5. Reinicie o servidor
+4. Preencha com suas credenciais reais do Google Cloud Console
+5. Salve
+6. Reinicie o servidor
+
+### Opção 3: Verificar Google Cloud Console
+- Confirme que as credenciais estão corretas no Google Cloud Console
+- Se necessário, recrie as credenciais OAuth
 
 ## 📝 Nota Importante
 
@@ -101,4 +104,3 @@ No Vite, variáveis de ambiente só funcionam se:
 - ✅ Estão no arquivo `.env` na raiz do projeto
 - ✅ O servidor foi reiniciado após modificar o `.env`
 - ✅ Não têm espaços ao redor do `=`
-
