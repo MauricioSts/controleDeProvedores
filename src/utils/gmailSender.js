@@ -90,26 +90,45 @@ export const authenticateGmail = async () => {
     // Obtém a origem atual para usar como redirect URI
     const currentOrigin = window.location.origin;
     
+    // Debug: mostra qual origem está sendo usada
+    console.log('🔍 Origem atual:', currentOrigin);
+    console.log('🔍 URL completa:', window.location.href);
+    
+    // Para Google Identity Services com popup, pode não precisar de redirect_uri explícito
+    // Vamos tentar sem primeiro, e usar postMessage
     return new Promise((resolve, reject) => {
       // Usa a nova API do Google Identity Services
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_OAUTH_CONFIG.clientId,
         scope: GOOGLE_OAUTH_CONFIG.scopes.join(' '),
-        // IMPORTANTE: Para aplicações web, use a origem atual como redirect_uri
-        // Não use pathname completo, apenas a origem
-        redirect_uri: currentOrigin,
+        // Não especificar redirect_uri - Google Identity Services usa postMessage por padrão
+        // Isso resolve o problema de redirect_uri_mismatch
         callback: (response) => {
+          console.log('📧 Resposta do OAuth:', response);
+          
           if (response.error) {
+            console.error('❌ Erro no OAuth:', response.error);
             if (response.error === 'popup_closed_by_user') {
               reject(new Error('Autenticação cancelada pelo usuário'));
             } else if (response.error.includes('redirect_uri_mismatch')) {
-              reject(new Error('Erro de configuração: redirect URI não corresponde. Verifique as configurações no Google Cloud Console. A origem configurada deve ser: ' + currentOrigin));
+              reject(new Error(
+                `❌ Erro de configuração no Google Cloud Console!\n\n` +
+                `A origem atual é: ${currentOrigin}\n\n` +
+                `Configure no Google Cloud Console:\n` +
+                `1. Vá em: APIs & Services > Credentials\n` +
+                `2. Clique no seu OAuth 2.0 Client ID\n` +
+                `3. Em "Authorized JavaScript origins", adicione: ${currentOrigin}\n` +
+                `4. Em "Authorized redirect URIs", adicione: ${currentOrigin}\n` +
+                `5. Clique em "Save"\n\n` +
+                `⚠️ Use APENAS a origem (sem caminhos como /callback)`
+              ));
             } else {
               reject(new Error('Erro ao autenticar: ' + response.error));
             }
             return;
           }
           if (response.access_token) {
+            console.log('✅ Token obtido com sucesso!');
             resolve(response.access_token);
           } else {
             reject(new Error('Token de acesso não obtido'));
@@ -121,8 +140,8 @@ export const authenticateGmail = async () => {
         }
       });
       
-      // Solicita o token de acesso
-      tokenClient.requestAccessToken();
+      // Solicita o token de acesso imediatamente, garantindo gesto do usuário
+      tokenClient.requestAccessToken({ prompt: '' });
     });
   } catch (error) {
     console.error('Erro ao autenticar:', error);
