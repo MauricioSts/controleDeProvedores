@@ -62,6 +62,46 @@ function DetalheProvedor() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [unauthorized, setUnauthorized] = useState(false);
 
+  // Helper para definir cores por status
+  // Normaliza texto para comparações estáveis (minúsculas, sem acentos, hifens)
+  const normalize = (text) => {
+    if (!text) return '';
+    return String(text)
+      .toLowerCase()
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+      .replace(/\s+/g, '-')
+      .trim();
+  };
+
+  // Retorna cores de foreground/background sutis
+  const getStatusColors = (value) => {
+    const subtle = {
+      green: { fg: { r: 16, g: 128, b: 67 }, bg: { r: 224, g: 247, b: 235 } },
+      red:   { fg: { r: 185, g: 28,  b: 28 }, bg: { r: 254, g: 226, b: 226 } },
+      yellow:{ fg: { r: 161, g: 98,  b: 7  }, bg: { r: 254, g: 243, b: 199 } },
+      gray:  { fg: { r: 100, g: 116, b: 139 }, bg: { r: 241, g: 245, b: 249 } }
+    };
+    if (!value) return subtle.gray;
+    const v = normalize(value);
+    if (v === 'regular') return subtle.green;
+    if (v === 'irregular' || v === 'inativa' || v === 'suspensa') return subtle.red;
+    if (v === 'nao-informado' || v === 'nao' || v === 'nao-informado') return subtle.yellow;
+    return subtle.yellow;
+  };
+
+  const drawStatusChip = (pdf, x, y, text, colors) => {
+    const display = String(text || 'N/A');
+    const textWidth = pdf.getTextWidth(display) + 4;
+    const badgeWidth = Math.max(22, Math.min(60, textWidth));
+    pdf.setFillColor(colors.bg.r, colors.bg.g, colors.bg.b);
+    pdf.roundedRect(x, y - 5, badgeWidth, 8, 2, 2, 'F');
+    pdf.setTextColor(colors.fg.r, colors.fg.g, colors.fg.b);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(display, x + 2, y + 2);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+  };
+
   // Função para gerar PDF do provedor
   const generatePDF = async (provedor) => {
     try {
@@ -128,8 +168,14 @@ function DetalheProvedor() {
         pdf.setFont('helvetica', 'bold');
         pdf.text(`${info.label}:`, 25, yPosition + 3);
         
+        // Valor com badge de status quando aplicável
         pdf.setFont('helvetica', 'normal');
-        pdf.text(info.value, 80, yPosition + 3);
+        if (info.label === 'Status da Empresa') {
+          const colors = getStatusColors(info.value);
+          drawStatusChip(pdf, 78, yPosition + 1, info.value, colors);
+        } else {
+          pdf.text(info.value, 80, yPosition + 3);
+        }
         
         yPosition += 8;
       });
@@ -198,8 +244,10 @@ function DetalheProvedor() {
         pdf.setFont('helvetica', 'bold');
         pdf.text(`${info.label}:`, 25, yPosition + 3);
         
+        // Badge de status para campos regulatórios
         pdf.setFont('helvetica', 'normal');
-        pdf.text(info.value, 80, yPosition + 3);
+        const colors = getStatusColors(info.value);
+        drawStatusChip(pdf, 78, yPosition + 1, info.value, colors);
         
         yPosition += 8;
       });
@@ -311,8 +359,14 @@ function DetalheProvedor() {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.text(`${info.label}:`, 25, yPosition + 3);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(info.value, 80, yPosition + 3);
+        // Chip sutil para Status da Empresa
+        if (info.label === 'Status da Empresa') {
+          const colors = getStatusColors(info.value);
+          drawStatusChip(pdf, 78, yPosition + 1, info.value, colors);
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(info.value, 80, yPosition + 3);
+        }
         yPosition += 8;
       });
       
@@ -371,8 +425,8 @@ function DetalheProvedor() {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.text(`${info.label}:`, 25, yPosition + 3);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(info.value, 80, yPosition + 3);
+        const colors = getStatusColors(info.value);
+        drawStatusChip(pdf, 78, yPosition + 1, info.value, colors);
         yPosition += 8;
       });
       
