@@ -112,6 +112,8 @@ function AppContent() {
         registroEstacoes: provedor.registroEstacoes,
         processoAnatel: provedor.processoAnatel,
         obs: provedor.obs,
+        // Envio automático de email (desativado por padrão)
+        enviarEmailAutomatico: false,
         // Dados do Representante Legal
         representanteLegal: provedor.representanteLegal || {},
         // Metadados do usuário

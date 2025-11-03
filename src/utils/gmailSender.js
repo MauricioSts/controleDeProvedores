@@ -119,7 +119,7 @@ export const authenticateGmail = async () => {
  * @param {string} subject - Assunto do email
  * @returns {string} Assunto codificado
  */
-const encodeSubject = (subject) => {
+export const encodeSubject = (subject) => {
   // Verifica se há caracteres não-ASCII
   if (/[\x80-\xFF]/.test(subject)) {
     // Codifica em Base64 para UTF-8
@@ -143,7 +143,7 @@ const encodeSubject = (subject) => {
  * @param {string} pdfFileName - Nome do arquivo PDF
  * @returns {string} Mensagem MIME codificada
  */
-const createEmailMessage = (to, subject, body, pdfBase64 = null, pdfFileName = 'relatorio.pdf') => {
+export const createEmailMessage = (to, subject, body, pdfBase64 = null, pdfFileName = 'relatorio.pdf') => {
   const boundary = '----=_Part_' + Math.random().toString(36).substr(2, 9);
   const delimiter = `\r\n--${boundary}\r\n`;
   

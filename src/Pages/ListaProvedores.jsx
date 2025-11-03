@@ -5,6 +5,7 @@ import ExplosionLoading from "../components/ExplosionLoading";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import { toast } from "react-toastify";
+import { testEnvioAutomatico } from "../utils/testEmailAutomatico";
 
 function ListaProvedores({ lista }) {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ function ListaProvedores({ lista }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showExplosionLoading, setShowExplosionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTestingEmails, setIsTestingEmails] = useState(false);
 
   const handleCardClick = (id) => {
     navigate(`/provedor/${id}`);
@@ -423,6 +425,78 @@ function ListaProvedores({ lista }) {
                 </svg>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* Botão Enviar Todos os Emails */}
+        {lista && lista.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.55 }}
+            className="flex justify-center mb-4"
+          >
+            <motion.button
+              whileHover={{ 
+                scale: 1.05,
+                y: -2,
+                boxShadow: "0 15px 35px rgba(34, 197, 94, 0.4)"
+              }}
+              whileTap={{ scale: 0.95 }}
+              onClick={async () => {
+                setIsTestingEmails(true);
+                try {
+                  toast.info('Você precisará fazer login no Google para autorizar o envio de emails.', {
+                    autoClose: 4000
+                  });
+                  
+                  // Busca provedores com switch ligado e envia emails
+                  const result = await testEnvioAutomatico();
+                  
+                  if (result.total === 0) {
+                    toast.warning('Nenhum provedor com envio ativado (switch ligado) e email cadastrado encontrado.');
+                  } else {
+                    const successCount = result.results.filter(r => r.status === 'success').length;
+                    const errorCount = result.results.filter(r => r.status === 'error').length;
+                    
+                    if (successCount > 0) {
+                      toast.success(`✅ ${successCount} email(s) enviado(s) com sucesso!`);
+                    }
+                    if (errorCount > 0) {
+                      toast.error(`❌ ${errorCount} email(s) falharam. Verifique o console.`);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Erro ao enviar emails:', error);
+                  toast.error(error.message || 'Erro ao enviar emails. Verifique o console.');
+                } finally {
+                  setIsTestingEmails(false);
+                }
+              }}
+              disabled={isTestingEmails}
+              className="relative px-8 py-4 rounded-xl font-semibold text-base transition-all duration-300 
+                         bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-xl shadow-green-500/30 
+                         border border-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed
+                         hover:from-green-400 hover:to-emerald-400"
+            >
+              <span className="flex items-center gap-2">
+                {isTestingEmails ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Enviando emails...
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">📧</span>
+                    Enviar Todos os Emails
+                  </>
+                )}
+              </span>
+            </motion.button>
           </motion.div>
         )}
 

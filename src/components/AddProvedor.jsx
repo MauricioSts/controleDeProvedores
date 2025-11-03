@@ -4,6 +4,8 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import CouncilInfo from "./CouncilInfo";
 import LoadingDots from "./LoadingDots";
+import { fetchCNPJData, isValidCNPJFormat } from "../utils/cnpjLookup";
+import { toast } from "react-toastify";
 
 function AddProvedor({ handleAddProvedor }) {
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -23,6 +25,8 @@ function AddProvedor({ handleAddProvedor }) {
   const [processoAnatel, setProcessoAnatel] = useState("");
   const [loading, setLoading] = useState(false);
   const [obs, setObs] = useState("");
+  const [loadingCNPJ, setLoadingCNPJ] = useState(false);
+  const [lastSearchedCNPJ, setLastSearchedCNPJ] = useState("");
   
   // Estados para validação visual
   const [errors, setErrors] = useState({});
@@ -275,24 +279,71 @@ function AddProvedor({ handleAddProvedor }) {
                 <label className="block font-semibold text-gray-300 mb-1">
                   CNPJ
                 </label>
-                <input
-                  type="text"
-                  value={cnpj}
-                  onChange={(e) => {
-                    setCnpj(e.target.value);
-                    if (errors.cnpj) {
-                      setErrors(prev => ({ ...prev, cnpj: false }));
-                    }
-                  }}
-                  placeholder="Digite o CNPJ"
-                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
-                    errors.cnpj
-                      ? "border-red-500 bg-red-900/20 text-red-200"
-                      : "border-gray-700 bg-gray-900 text-gray-200"
-                  } ${
-                    shakeFields.cnpj ? "animate-pulse" : ""
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={cnpj}
+                    onChange={(e) => {
+                      setCnpj(e.target.value);
+                      if (errors.cnpj) {
+                        setErrors(prev => ({ ...prev, cnpj: false }));
+                      }
+                    }}
+                    onBlur={async () => {
+                      // Busca automática quando o usuário sai do campo e o CNPJ está completo
+                      const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
+                      if (cleanedCNPJ.length === 14 && cleanedCNPJ !== lastSearchedCNPJ) {
+                        setLoadingCNPJ(true);
+                        try {
+                          // Busca dados do CNPJ
+                          const data = await fetchCNPJData(cleanedCNPJ);
+                          
+                          // Preenche APENAS Razão Social e Status da Empresa
+                          if (data.razaoSocial) setRazaoSocial(data.razaoSocial);
+                          
+                          if (data.statusEmpresa) {
+                            // Converte situação do CNPJ para status da empresa
+                            const statusMap = {
+                              'ativa': 'ativa',
+                              'suspensa': 'suspensa',
+                              'inapta': 'inativa',
+                              'baixada': 'inativa'
+                            };
+                            setStatusEmpresa(statusMap[data.statusEmpresa] || 'ativa');
+                          }
+                          
+                          setLastSearchedCNPJ(cleanedCNPJ);
+                          toast.success('Razão Social e Status preenchidos automaticamente! ✅');
+                        } catch (error) {
+                          console.error('Erro ao buscar CNPJ:', error);
+                          toast.error(error.message || 'Não foi possível buscar dados do CNPJ');
+                        } finally {
+                          setLoadingCNPJ(false);
+                        }
+                      }
+                    }}
+                    placeholder="Digite o CNPJ (14 dígitos)"
+                    className={`w-full border rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition ${
+                      errors.cnpj
+                        ? "border-red-500 bg-red-900/20 text-red-200"
+                        : "border-gray-700 bg-gray-900 text-gray-200"
+                    } ${
+                      shakeFields.cnpj ? "animate-pulse" : ""
+                    }`}
+                  />
+                  {loadingCNPJ && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <LoadingDots />
+                    </div>
+                  )}
+                  {cnpj && isValidCNPJFormat(cnpj) && !loadingCNPJ && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </motion.div>
 
               {/* Nº Fistel */}

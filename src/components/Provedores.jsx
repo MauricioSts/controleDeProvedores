@@ -1,5 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { toast } from "react-toastify";
 
 function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
   const statusClass = (status, returnColorBase = false) => {
@@ -169,6 +172,51 @@ function Provedores({ listaProvedores, onCardClick, searchTerm = '' }) {
                     ? `${p.councilInfo.nome} ${p.councilInfo.sobrenome}`
                     : p.councilInfo?.nome || "N/A"}
                 </p>
+              </div>
+
+              {/* Switch para envio automático de email */}
+              <div 
+                className="mt-3 pt-3 border-t border-gray-600/50 flex items-center justify-between"
+                onClick={(e) => e.stopPropagation()} // Previne que o click no switch abra o card
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400 text-lg">📧</span>
+                  <span className="text-sm font-medium text-gray-300">
+                    Envio automático
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={p.enviarEmailAutomatico === true}
+                    onChange={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        const provedorRef = doc(db, 'provedores', p.id);
+                        const novoEstado = e.target.checked;
+                        await updateDoc(provedorRef, {
+                          enviarEmailAutomatico: novoEstado
+                        });
+                        toast.success(
+                          novoEstado 
+                            ? 'Email automático ativado ✅' 
+                            : 'Email automático desativado ❌'
+                        );
+                      } catch (error) {
+                        console.error('Erro ao atualizar:', error);
+                        toast.error('Erro ao atualizar configuração');
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className={`relative w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-400 rounded-full peer transition-colors duration-300 ${
+                    p.enviarEmailAutomatico === true ? 'bg-cyan-500 shadow-lg shadow-cyan-500/50' : 'bg-gray-600'
+                  }`}>
+                    <div className={`absolute top-[2px] left-[2px] bg-white rounded-full h-5 w-5 transition-transform duration-300 shadow-md ${
+                      p.enviarEmailAutomatico === true ? 'translate-x-5' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </label>
               </div>
             </div>
           </motion.div>
