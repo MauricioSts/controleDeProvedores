@@ -16,7 +16,7 @@ const loadGoogleAPI = () => {
       resolve();
       return;
     }
-    
+
     // Verifica se já existe um script carregando
     const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
     if (existingScript) {
@@ -31,7 +31,7 @@ const loadGoogleAPI = () => {
       existingScript.onerror = () => reject(new Error('Erro ao carregar Google Identity Services'));
       return;
     }
-    
+
     // Cria e adiciona o script
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -67,20 +67,17 @@ export const initGmailAPI = async () => {
 export const authenticateGmail = async () => {
   try {
     await initGmailAPI();
-    
+
     // Verifica se está disponível
     if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
       throw new Error('Google Identity Services não está disponível');
     }
-    
-    const currentOrigin = window.location.origin;
-    
+
     return new Promise((resolve, reject) => {
       try {
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_OAUTH_CONFIG.clientId,
           scope: GOOGLE_OAUTH_CONFIG.scopes.join(' '),
-          redirect_uri: currentOrigin,
           callback: (response) => {
             if (response.error) {
               if (response.error === 'popup_closed_by_user') {
@@ -101,7 +98,7 @@ export const authenticateGmail = async () => {
             reject(new Error('Erro ao autenticar: ' + (error.message || 'Erro desconhecido')));
           }
         });
-        
+
         tokenClient.requestAccessToken();
       } catch (error) {
         console.error('Erro ao criar tokenClient:', error);
@@ -135,73 +132,100 @@ export const encodeSubject = (subject) => {
 };
 
 /**
- * Cria uma mensagem MIME para envio via Gmail API
+ * Cria uma mensagem MIME para envio via Gmail API.
+ * Suporta múltiplos anexos via array `attachments`.
+ *
  * @param {string} to - Email do destinatário
  * @param {string} subject - Assunto do email
  * @param {string} body - Corpo do email (HTML ou texto)
- * @param {string} pdfBase64 - PDF em base64 (opcional)
- * @param {string} pdfFileName - Nome do arquivo PDF
- * @returns {string} Mensagem MIME codificada
+ * @param {string|null} pdfBase64 - PDF principal em base64 (opcional, legado)
+ * @param {string} pdfFileName - Nome do PDF principal
+ * @param {Array<{base64: string, fileName: string}>} attachments - Anexos adicionais
+ * @returns {string} Mensagem MIME codificada em base64url
  */
-export const createEmailMessage = (to, subject, body, pdfBase64 = null, pdfFileName = 'relatorio.pdf') => {
+export const createEmailMessage = (
+  to,
+  subject,
+  body,
+  pdfBase64 = null,
+  pdfFileName = 'relatorio.pdf',
+  attachments = []
+) => {
   const boundary = '----=_Part_' + Math.random().toString(36).substr(2, 9);
   const delimiter = `\r\n--${boundary}\r\n`;
-  
+
   let rawMessage = '';
-  
+
   // Headers principais
   rawMessage += `To: ${to}\r\n`;
   rawMessage += `Subject: ${encodeSubject(subject)}\r\n`;
   rawMessage += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
-  
+
   // Corpo do email
   rawMessage += delimiter;
   rawMessage += `Content-Type: text/html; charset=UTF-8\r\n`;
   rawMessage += `Content-Transfer-Encoding: 7bit\r\n\r\n`;
   rawMessage += body;
-  
-  // Anexo PDF (se fornecido)
-  if (pdfBase64) {
-    // Remove o prefixo data:application/pdf;base64, se existir
-    const base64Data = pdfBase64.includes(',') 
-      ? pdfBase64.split(',')[1] 
-      : pdfBase64;
-    
+
+  // Helper para adicionar um anexo PDF
+  const addPdfAttachment = (base64Data, fileName) => {
+    const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
     rawMessage += delimiter;
-    rawMessage += `Content-Type: application/pdf; name="${pdfFileName}"\r\n`;
-    rawMessage += `Content-Disposition: attachment; filename="${pdfFileName}"\r\n`;
+    rawMessage += `Content-Type: application/pdf; name="${fileName}"\r\n`;
+    rawMessage += `Content-Disposition: attachment; filename="${fileName}"\r\n`;
     rawMessage += `Content-Transfer-Encoding: base64\r\n\r\n`;
-    rawMessage += base64Data;
+    rawMessage += cleanBase64;
+  };
+
+  // PDF principal (legado — relatório gerado automaticamente)
+  if (pdfBase64) {
+    addPdfAttachment(pdfBase64, pdfFileName);
   }
-  
+
+  // Anexos adicionais (PDFs do provedor)
+  if (attachments && attachments.length > 0) {
+    attachments.forEach(({ base64, fileName }) => {
+      if (base64 && fileName) addPdfAttachment(base64, fileName);
+    });
+  }
+
   rawMessage += `\r\n--${boundary}--\r\n`;
-  
+
   // Codifica em base64url (RFC 4648)
   const encoded = btoa(unescape(encodeURIComponent(rawMessage)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
-  
+
   return encoded;
 };
 
 /**
- * Envia email via Gmail API
+ * Envia email via Gmail API com suporte a múltiplos anexos.
+ *
  * @param {string} to - Email do destinatário
  * @param {string} subject - Assunto do email
  * @param {string} body - Corpo do email
- * @param {string} pdfBase64 - PDF em base64
- * @param {string} pdfFileName - Nome do arquivo PDF
+ * @param {string|null} pdfBase64 - PDF principal em base64 (relatório gerado)
+ * @param {string} pdfFileName - Nome do PDF principal
+ * @param {Array<{base64: string, fileName: string}>} attachments - Anexos adicionais
  * @returns {Promise<Object>} Resposta da API
  */
-export const sendEmailWithPDF = async (to, subject, body, pdfBase64, pdfFileName = 'relatorio.pdf') => {
+export const sendEmailWithPDF = async (
+  to,
+  subject,
+  body,
+  pdfBase64,
+  pdfFileName = 'relatorio.pdf',
+  attachments = []
+) => {
   try {
     // Autentica e obtém o token
     const accessToken = await authenticateGmail();
-    
-    // Cria a mensagem MIME
-    const rawMessage = createEmailMessage(to, subject, body, pdfBase64, pdfFileName);
-    
+
+    // Cria a mensagem MIME com todos os anexos
+    const rawMessage = createEmailMessage(to, subject, body, pdfBase64, pdfFileName, attachments);
+
     // Envia via Gmail API usando fetch
     const response = await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
@@ -209,17 +233,15 @@ export const sendEmailWithPDF = async (to, subject, body, pdfBase64, pdfFileName
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        raw: rawMessage
-      })
+      body: JSON.stringify({ raw: rawMessage })
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       console.error('Erro ao enviar email:', error);
       throw new Error(error.error?.message || 'Erro ao enviar email via Gmail API');
     }
-    
+
     const result = await response.json();
     return result;
   } catch (error) {
