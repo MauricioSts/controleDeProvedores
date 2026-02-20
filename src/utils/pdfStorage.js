@@ -18,13 +18,17 @@ import {
 import { db } from "../firebase/config";
 
 /**
- * Retorna os últimos N meses em formato "YYYY-MM" (inclusive o mês atual).
- * Ex: getLast6MonthKeys(6) em fev/2026 → ["2025-09","2025-10",...,"2026-02"]
+ * Retorna os últimos N meses em formato "YYYY-MM" (terminando no MÊS ANTERIOR).
+ * Ex: getLastNMonthKeys(6) em fev/2026 (mês atual = 1, pois array é 0-based)
+ * → a referência final é jan/2026.
+ * As chaves geradas serão: ["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01"]
  */
 export const getLastNMonthKeys = (n = 6) => {
     const now = new Date();
     const result = [];
-    for (let i = n - 1; i >= 0; i--) {
+    // Começamos em n (ex: 6) e descemos até 1 (ex: x - 6, x - 5, ..., x - 1)
+    // Desta forma, o mês mais recente gerado é (Mês Atual - 1), que é o mês passado.
+    for (let i = n; i >= 1; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         result.push(key);
