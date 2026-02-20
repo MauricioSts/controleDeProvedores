@@ -10,8 +10,17 @@ import html2canvas from "html2canvas";
 import emailjs from "@emailjs/browser";
 import { EMAILJS_CONFIG, isEmailJSConfigured } from "../config/emailjs";
 import { sendEmailWithPDF } from "../utils/gmailSender";
-import { listPdfs } from "../utils/pdfStorage";
+import { listPdfs, getLastNMonthKeys } from "../utils/pdfStorage";
 import PdfAttachments from "../components/PdfAttachments";
+
+const MONTH_NAMES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/** Retorna "YYYY-MM" para um dado índice de mês e ano. */
+const toMonthKey = (year, monthIndex) =>
+  `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
 
 // Componente simples para substituir window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -52,6 +61,75 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   </motion.div>
 );
 
+/** Modal de seleção de mês para envio do relatório */
+const SendMonthModal = ({ selectedMonth, onMonthChange, onConfirm, onCancel }) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        transition={{ duration: 0.3 }}
+        className="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full border border-gray-700"
+      >
+        <h3 className="text-xl font-bold text-blue-400 mb-2">📧 Enviar Relatório</h3>
+        <p className="text-gray-400 text-sm mb-4">Selecione o mês de referência do relatório e os documentos que serão anexados.</p>
+
+        <label className="block text-sm font-semibold text-gray-300 mb-2">Mês de referência</label>
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {getLastNMonthKeys(6).map((key) => {
+            const [yr, mn] = key.split('-').map(Number);
+            const label = MONTH_NAMES[mn - 1];
+            const isActive = selectedMonth === key;
+            return (
+              <motion.button
+                key={key}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onMonthChange(key)}
+                className={`px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 flex flex-col items-center leading-tight
+                  ${isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 border border-gray-600'
+                  }`}
+              >
+                <span>{label.slice(0, 3)}</span>
+                <span className="opacity-60 text-[9px]">{yr}</span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onCancel}
+            className="px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition"
+          >
+            Cancelar
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onConfirm}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition font-semibold"
+          >
+            📧 Enviar
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 function DetalheProvedor() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -62,7 +140,16 @@ function DetalheProvedor() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
   const [unauthorized, setUnauthorized] = useState(false);
+
+  // Mês de referência para o relatório (padrão: mês anterior)
+  const _now = new Date();
+  const _prevMonthIndex = _now.getMonth() === 0 ? 11 : _now.getMonth() - 1;
+  const _prevYear = _now.getMonth() === 0 ? _now.getFullYear() - 1 : _now.getFullYear();
+  const [sendMonth, setSendMonth] = useState(
+    toMonthKey(_prevYear, _prevMonthIndex)
+  );
 
   // Helper para definir cores por status
   // Normaliza texto para comparações estáveis (minúsculas, sem acentos, hifens)
@@ -305,7 +392,7 @@ function DetalheProvedor() {
   };
 
   // Função para gerar PDF em base64 (para envio por email)
-  const generatePDFBase64 = async (provedor) => {
+  const generatePDFBase64 = async (provedor, monthLabel = null, yearLabel = null) => {
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       pdf.setFont('helvetica');
@@ -314,15 +401,15 @@ function DetalheProvedor() {
       pdf.setFillColor(6, 182, 212);
       pdf.rect(0, 0, 210, 30, 'F');
 
-      // Título principal com cor branca e mês (mês anterior)
+      // Título principal — usa monthLabel/yearLabel se fornecidos, senão mês anterior
       const now = new Date();
-      const monthNames = [
+      const _monthNames = [
         'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
       ];
       const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-      const previousMonth = monthNames[previousMonthIndex];
-      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      const previousMonth = monthLabel || _monthNames[previousMonthIndex];
+      const reportYear = yearLabel || (now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear());
 
       pdf.setFontSize(24);
       pdf.setTextColor(255, 255, 255);
@@ -485,38 +572,39 @@ function DetalheProvedor() {
     }
   };
 
-  // Funo para enviar relatrio por email via Gmail API
+  // Função para enviar relatório por email via Gmail API
   const sendReportByEmail = async () => {
+    // Delega a abertura do modal para o botão.
+    // A função real é sendReportByEmailWithMonth, chamada depois da seleção.
+    setShowSendModal(true);
+  };
+
+  const sendReportByEmailWithMonth = async (monthKey) => {
+    setShowSendModal(false);
     if (!provedor.emailContato) {
-      toast.error('Email de contato no cadastrado');
+      toast.error('Email de contato não cadastrado');
       return;
     }
 
     try {
       toast.info('Gerando PDF e preparando envio...', { autoClose: 2000 });
 
-      // Gera o PDF do relatrio em base64
-      const pdfBase64 = await generatePDFBase64(provedor);
+      // Resolve mês e ano a partir do monthKey ("YYYY-MM")
+      const [reportYear, monthNum] = monthKey.split('-').map(Number);
+      const previousMonth = MONTH_NAMES[monthNum - 1];
 
-      // Calcula ms anterior para o assunto
-      const now = new Date();
-      const monthNames = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-      ];
-      const previousMonthIndex = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-      const previousMonth = monthNames[previousMonthIndex];
-      const reportYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      // Gera o PDF do relatório em base64 com o mês correto
+      const pdfBase64 = await generatePDFBase64(provedor, previousMonth, reportYear);
 
       // Nome do arquivo PDF principal
       const pdfFileName = `relatorio_${provedor.razaoSocial?.replace(/\s+/g, '_') || 'provedor'}.pdf`;
 
-      // Busca PDFs extras do provedor no Firestore (base64 já incluso)
+      // Busca PDFs do mês selecionado no Firestore (base64 já incluso)
       let attachments = [];
       try {
-        const storedPdfs = await listPdfs(id);
+        const storedPdfs = await listPdfs(id, monthKey);
         if (storedPdfs.length > 0) {
-          toast.info(`Anexando ${storedPdfs.length} documento(s) adicional(is)...`, { autoClose: 2000 });
+          toast.info(`Anexando ${storedPdfs.length} documento(s) de ${previousMonth}...`, { autoClose: 2000 });
           // base64 já vem direto do Firestore — sem fetch extra
           attachments = storedPdfs
             .filter((pdf) => pdf.data)
@@ -748,6 +836,14 @@ function DetalheProvedor() {
             message={`Você realmente deseja excluir o provedor ${provedor.razaoSocial}? Esta ação é irreversível.`}
             onConfirm={confirmExclusao}
             onCancel={() => setShowConfirmModal(false)}
+          />
+        )}
+        {showSendModal && (
+          <SendMonthModal
+            selectedMonth={sendMonth}
+            onMonthChange={setSendMonth}
+            onConfirm={() => sendReportByEmailWithMonth(sendMonth)}
+            onCancel={() => setShowSendModal(false)}
           />
         )}
       </AnimatePresence>
@@ -1170,7 +1266,7 @@ function DetalheProvedor() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={sendReportByEmail}
+            onClick={() => setShowSendModal(true)}
             disabled={!provedor.emailContato}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:from-blue-500 hover:to-indigo-500 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             title={!provedor.emailContato ? 'Email de contato não cadastrado' : 'Enviar relatório por email'}

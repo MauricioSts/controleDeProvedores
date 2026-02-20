@@ -7,15 +7,35 @@ import {
     deletePdf,
     downloadBase64Pdf,
     formatFileSize,
+    getLastNMonthKeys,
 } from "../utils/pdfStorage";
+
+const MONTH_NAMES = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+/** Converte "YYYY-MM" para rótulo legível, ex: "Fev 2026" */
+const monthKeyToLabel = (key, short = false) => {
+    const [year, month] = key.split("-").map(Number);
+    const name = MONTH_NAMES[month - 1];
+    return short ? `${name.slice(0, 3)}` : `${name} ${year}`;
+};
 
 /**
  * Componente de gerenciamento de PDFs para um provedor.
  * Os arquivos são salvos no Firestore (sem Firebase Storage, sem CORS).
+ * Suporta abas de mês para organizar documentos por período.
  * @param {string} provedorId - ID do provedor no Firestore
  */
 function PdfAttachments({ provedorId }) {
+    // Janela dos últimos 6 meses (mais recente = último da lista)
+    const last6 = getLastNMonthKeys(6);
+    const currentMonthKey = last6[last6.length - 1]; // mês atual
+
+    const [activeMonth, setActiveMonth] = useState(currentMonthKey);
     const [pdfs, setPdfs] = useState([]);
+    const [allCounts, setAllCounts] = useState({}); // { "YYYY-MM": count }
     const [loadingList, setLoadingList] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -23,15 +43,37 @@ function PdfAttachments({ provedorId }) {
     const [deletingId, setDeletingId] = useState(null);
     const fileInputRef = useRef(null);
 
+    // Carrega contagem de todos os meses e lista do mês ativo
+    useEffect(() => {
+        if (!provedorId) return;
+        loadAllCounts();
+    }, [provedorId]);
+
     useEffect(() => {
         if (!provedorId) return;
         loadPdfs();
-    }, [provedorId]);
+    }, [provedorId, activeMonth]);
+
+    const loadAllCounts = async () => {
+        try {
+            // Busca todos os documentos (sem filtro) para montar contagens por mês
+            const all = await listPdfs(provedorId, null);
+            const counts = {};
+            all.forEach((pdf) => {
+                if (pdf.month) {
+                    counts[pdf.month] = (counts[pdf.month] || 0) + 1;
+                }
+            });
+            setAllCounts(counts);
+        } catch {
+            // silencioso — contagens são opcionais
+        }
+    };
 
     const loadPdfs = async () => {
         setLoadingList(true);
         try {
-            const list = await listPdfs(provedorId);
+            const list = await listPdfs(provedorId, activeMonth);
             setPdfs(list);
         } catch {
             toast.error("Erro ao carregar documentos.");
@@ -48,9 +90,14 @@ function PdfAttachments({ provedorId }) {
         try {
             const result = await uploadPdf(provedorId, file, (progress) => {
                 setUploadProgress(progress);
-            });
+            }, activeMonth);
+
             setPdfs((prev) => [result, ...prev]);
-            toast.success(`"${file.name}" salvo com sucesso! 📎`);
+            setAllCounts((prev) => ({
+                ...prev,
+                [activeMonth]: (prev[activeMonth] || 0) + 1,
+            }));
+            toast.success(`"${file.name}" salvo em ${activeMonthLabel()}! 📎`);
         } catch (err) {
             toast.error(err.message || "Erro ao salvar o arquivo.");
         } finally {
@@ -82,7 +129,7 @@ function PdfAttachments({ provedorId }) {
             const file = e.dataTransfer.files?.[0];
             if (file) handleFileSelected(file);
         },
-        [provedorId]
+        [provedorId, activeMonth]
     );
 
     const handleDelete = async (pdf) => {
@@ -90,6 +137,10 @@ function PdfAttachments({ provedorId }) {
         try {
             await deletePdf(provedorId, pdf.id);
             setPdfs((prev) => prev.filter((p) => p.id !== pdf.id));
+            setAllCounts((prev) => ({
+                ...prev,
+                [activeMonth]: Math.max(0, (prev[activeMonth] || 1) - 1),
+            }));
             toast.success(`"${pdf.originalName}" removido.`);
         } catch {
             toast.error("Erro ao remover o arquivo.");
@@ -115,6 +166,12 @@ function PdfAttachments({ provedorId }) {
         }
     };
 
+    /** Rótulo legível do mês ativo, ex: "Fevereiro 2026" */
+    const activeMonthLabel = () => {
+        const [year, month] = activeMonth.split("-").map(Number);
+        return `${MONTH_NAMES[month - 1]} ${year}`;
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -123,17 +180,53 @@ function PdfAttachments({ provedorId }) {
             className="col-span-2 mt-6 p-6 bg-gray-700/50 rounded-xl border-l-4 border-orange-500"
         >
             {/* Cabeçalho */}
-            <div className="flex items-center justify-between mb-6 border-b border-gray-600 pb-3">
+            <div className="flex items-center justify-between mb-4 border-b border-gray-600 pb-3">
                 <h3 className="text-2xl font-bold text-orange-400 flex items-center gap-2">
                     📎 Documentos Anexos
                 </h3>
                 <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-400">
-                        {pdfs.length} {pdfs.length === 1 ? "documento" : "documentos"}
+                        {pdfs.length} {pdfs.length === 1 ? "documento" : "documentos"} em {activeMonthLabel()}
                     </span>
                     <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full">
                         máx. 700 KB/arquivo
                     </span>
+                </div>
+            </div>
+
+            {/* ── Abas dos Últimos 6 Meses ── */}
+            <div className="mb-5 overflow-x-auto">
+                <div className="flex gap-1.5 min-w-max pb-1">
+                    {last6.map((key) => {
+                        const isActive = activeMonth === key;
+                        const count = allCounts[key] || 0;
+                        const [year, month] = key.split("-").map(Number);
+                        return (
+                            <motion.button
+                                key={key}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setActiveMonth(key)}
+                                className={`relative px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap
+                                    ${isActive
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                                        : "bg-gray-800/70 text-gray-400 hover:bg-gray-700 hover:text-gray-200 border border-gray-700"
+                                    }`}
+                            >
+                                {monthKeyToLabel(key, true)}
+                                <span className="ml-1 text-[10px] opacity-60">{year}</span>
+                                {count > 0 && (
+                                    <span
+                                        className={`ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold
+                                            ${isActive ? "bg-white/30 text-white" : "bg-orange-500/80 text-white"}`}
+                                    >
+                                        {count}
+                                    </span>
+                                )}
+                            </motion.button>
+                        );
+                    })}
+                    <span className="self-center ml-2 text-xs text-gray-600 italic">(últimos 6 meses)</span>
                 </div>
             </div>
 
@@ -171,7 +264,7 @@ function PdfAttachments({ provedorId }) {
                             className="flex flex-col items-center gap-4"
                         >
                             <div className="text-3xl">⏳</div>
-                            <p className="text-gray-300 font-medium">Salvando arquivo...</p>
+                            <p className="text-gray-300 font-medium">Salvando arquivo em {activeMonthLabel()}...</p>
                             <div className="w-full max-w-xs bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                 <motion.div
                                     className="h-full bg-gradient-to-r from-orange-400 to-amber-400 rounded-full"
@@ -206,7 +299,7 @@ function PdfAttachments({ provedorId }) {
                             <p className="text-gray-300 font-medium">
                                 {isDragging
                                     ? "Solte o arquivo aqui!"
-                                    : "Arraste um PDF ou clique para selecionar"}
+                                    : `Arraste um PDF ou clique para adicionar em ${activeMonthLabel()}`}
                             </p>
                             <p className="text-gray-500 text-sm">
                                 Apenas arquivos .PDF • Máximo 700 KB
@@ -226,7 +319,7 @@ function PdfAttachments({ provedorId }) {
                             className="w-5 h-5 border-2 border-orange-400 border-t-transparent rounded-full"
                         />
                         <span className="text-gray-400 text-sm">
-                            Carregando documentos...
+                            Carregando documentos de {activeMonthLabel()}...
                         </span>
                     </div>
                 ) : pdfs.length === 0 ? (
@@ -237,7 +330,10 @@ function PdfAttachments({ provedorId }) {
                     >
                         <div className="text-4xl mb-2">📭</div>
                         <p className="text-gray-400 text-sm">
-                            Nenhum documento anexado ainda.
+                            Nenhum documento em <span className="text-orange-400 font-semibold">{activeMonthLabel()}</span>.
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                            Arraste um PDF ou clique na área acima para adicionar.
                         </p>
                     </motion.div>
                 ) : (

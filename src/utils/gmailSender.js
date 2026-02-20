@@ -61,14 +61,37 @@ export const initGmailAPI = async () => {
 };
 
 /**
+ * Cache do token OAuth em memória (válido por ~1h).
+ * Reutilizado enquanto não expirar, eliminando logins repetidos na sessão.
+ */
+let _tokenCache = {
+  accessToken: null,
+  expiresAt: 0, // timestamp ms
+};
+
+/** Limpa o cache (usado em casos de erro 401) */
+const clearTokenCache = () => {
+  _tokenCache = { accessToken: null, expiresAt: 0 };
+};
+
+/** Retorna true se o token cacheado ainda é válido (com 2 min de margem) */
+const isCachedTokenValid = () => {
+  return _tokenCache.accessToken && Date.now() < _tokenCache.expiresAt - 2 * 60 * 1000;
+};
+
+/**
  * Autentica o usuário usando Google Identity Services
  * @returns {Promise<string>} Token de acesso
  */
 export const authenticateGmail = async () => {
+  // Reutiliza token válido — sem popup de login
+  if (isCachedTokenValid()) {
+    return _tokenCache.accessToken;
+  }
+
   try {
     await initGmailAPI();
 
-    // Verifica se está disponível
     if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
       throw new Error('Google Identity Services não está disponível');
     }
@@ -88,6 +111,12 @@ export const authenticateGmail = async () => {
               return;
             }
             if (response.access_token) {
+              // Salva no cache com tempo de expiração (padrão Google: 3600s)
+              const expiresIn = (response.expires_in || 3600) * 1000;
+              _tokenCache = {
+                accessToken: response.access_token,
+                expiresAt: Date.now() + expiresIn,
+              };
               resolve(response.access_token);
             } else {
               reject(new Error('Token de acesso não obtido'));
@@ -220,13 +249,11 @@ export const sendEmailWithPDF = async (
   attachments = []
 ) => {
   try {
-    // Autentica e obtém o token
+    // Obtém token (do cache ou novo login)
     const accessToken = await authenticateGmail();
 
-    // Cria a mensagem MIME com todos os anexos
     const rawMessage = createEmailMessage(to, subject, body, pdfBase64, pdfFileName, attachments);
 
-    // Envia via Gmail API usando fetch
     const response = await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: {
@@ -236,16 +263,35 @@ export const sendEmailWithPDF = async (
       body: JSON.stringify({ raw: rawMessage })
     });
 
+    // Token expirado/inválido: limpa cache e tenta uma vez com novo login
+    if (response.status === 401) {
+      clearTokenCache();
+      const freshToken = await authenticateGmail();
+      const retry = await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${freshToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ raw: rawMessage })
+      });
+      if (!retry.ok) {
+        const err = await retry.json();
+        throw new Error(err.error?.message || 'Erro ao enviar email via Gmail API');
+      }
+      return await retry.json();
+    }
+
     if (!response.ok) {
       const error = await response.json();
       console.error('Erro ao enviar email:', error);
       throw new Error(error.error?.message || 'Erro ao enviar email via Gmail API');
     }
 
-    const result = await response.json();
-    return result;
+    return await response.json();
   } catch (error) {
     console.error('Erro ao enviar email:', error);
     throw error;
   }
 };
+

@@ -17,6 +17,47 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
+/**
+ * Retorna os últimos N meses em formato "YYYY-MM" (inclusive o mês atual).
+ * Ex: getLast6MonthKeys(6) em fev/2026 → ["2025-09","2025-10",...,"2026-02"]
+ */
+export const getLastNMonthKeys = (n = 6) => {
+    const now = new Date();
+    const result = [];
+    for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        result.push(key);
+    }
+    return result;
+};
+
+/**
+ * Remove documentos cujo campo `month` está fora dos últimos N meses.
+ * Chamado automaticamente após cada upload.
+ */
+export const cleanupOldPdfs = async (provedorId, keepMonths = 6) => {
+    try {
+        const allowed = new Set(getLastNMonthKeys(keepMonths));
+        const snapshot = await getDocs(
+            collection(db, "provedores", provedorId, "attachments")
+        );
+        const deletions = snapshot.docs
+            .filter((d) => {
+                const m = d.data().month;
+                // Remove se tiver mês definido e estiver fora da janela permitida
+                return m && !allowed.has(m);
+            })
+            .map((d) => deleteDoc(doc(db, "provedores", provedorId, "attachments", d.id)));
+        if (deletions.length > 0) {
+            await Promise.all(deletions);
+            console.info(`[pdfStorage] ${deletions.length} documento(s) antigo(s) removido(s).`);
+        }
+    } catch (err) {
+        console.warn("[pdfStorage] Falha na limpeza automática:", err);
+    }
+};
+
 const MAX_FILE_SIZE_BYTES = 700 * 1024; // 700 KB
 
 /**
@@ -51,7 +92,7 @@ const validateFile = (file) => {
  * @param {function} onProgress - callback de progresso (0-100)
  * @returns {Promise<{id, originalName, data, size, uploadedAt}>}
  */
-export const uploadPdf = async (provedorId, file, onProgress = null) => {
+export const uploadPdf = async (provedorId, file, onProgress = null, month = null) => {
     validateFile(file);
 
     if (onProgress) onProgress(20);
@@ -65,10 +106,14 @@ export const uploadPdf = async (provedorId, file, onProgress = null) => {
             data: base64,
             size: file.size,
             uploadedAt: serverTimestamp(),
+            month: month || null,
         }
     );
 
     if (onProgress) onProgress(100);
+
+    // Limpeza automática em background (não bloqueia o upload)
+    cleanupOldPdfs(provedorId, 6).catch(() => { });
 
     return {
         id: docRef.id,
@@ -76,6 +121,7 @@ export const uploadPdf = async (provedorId, file, onProgress = null) => {
         data: base64,
         size: file.size,
         uploadedAt: new Date().toISOString(),
+        month: month || null,
     };
 };
 
@@ -84,7 +130,7 @@ export const uploadPdf = async (provedorId, file, onProgress = null) => {
  * @param {string} provedorId
  * @returns {Promise<Array<{id, originalName, data, size, uploadedAt}>>}
  */
-export const listPdfs = async (provedorId) => {
+export const listPdfs = async (provedorId, month = null) => {
     const snapshot = await getDocs(
         collection(db, "provedores", provedorId, "attachments")
     );
@@ -97,6 +143,10 @@ export const listPdfs = async (provedorId) => {
                 d.data().uploadedAt?.toDate?.().toISOString() ||
                 new Date().toISOString(),
         }))
+        .filter((d) => {
+            if (!month) return true; // sem filtro — retorna todos
+            return d.month === month;
+        })
         .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
 };
 
