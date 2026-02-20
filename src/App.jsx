@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AddProvedor from "./components/AddProvedor";
 import ListaProvedores from "./Pages/ListaProvedores";
 import DetalheProvedor from "./Pages/DetalheProvedor";
-import Login from "./components/Login";
+import LandingPage from "./Pages/LandingPage";
 import Loading from "./components/Loading";
 import UnauthorizedAccess from "./components/UnauthorizedAccess";
 import UserManagement from "./components/UserManagement";
@@ -158,9 +158,9 @@ function AppContent() {
     return <UnauthorizedAccess userEmail={userEmail} />;
   }
 
-  // Mostrar login se não estiver autenticado
+  // Mostrar landing page se não estiver autenticado
   if (!user) {
-    return <Login />;
+    return <LandingPage />;
   }
 
   return (
@@ -199,42 +199,11 @@ function AppContent() {
               <div className="flex flex-col">
                 <motion.h1
                   className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    y: [0, -8, 0]
-                  }}
-                  transition={{
-                    backgroundPosition: {
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    },
-                    y: {
-                      delay: 1.2,
-                      duration: 0.6,
-                      ease: "easeOut"
-                    }
-                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
                 >
-                  {"BridgeAndBits".split("").map((letter, index) => (
-                    <motion.span
-                      key={index}
-                      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: {
-                          delay: index * 0.1,
-                          duration: 0.5,
-                          ease: "easeOut"
-                        }
-                      }}
-                      className="inline-block"
-                    >
-                      {letter === " " ? "\u00A0" : letter}
-                    </motion.span>
-                  ))}
+                  BridgeAndBits
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
@@ -307,16 +276,9 @@ function AppContent() {
                   transition={{ duration: 0.3 }}
                 />
                 <span className="relative z-10 flex items-center gap-3">
-                  <motion.div
-                    className="w-2 h-2 rounded-full bg-current"
-                    animate={{
-                      scale: !isOnProviderPage && view === "add" ? [1, 1.2, 1] : 1,
-                      opacity: !isOnProviderPage && view === "add" ? [0.8, 1, 0.8] : 0.6
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: !isOnProviderPage && view === "add" ? Infinity : 0
-                    }}
+                  <div
+                    className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "add" ? "opacity-100" : "opacity-40"
+                      }`}
                   />
                   <span className="hidden sm:inline">Adicionar</span>
                 </span>
@@ -342,16 +304,9 @@ function AppContent() {
                   transition={{ duration: 0.3 }}
                 />
                 <span className="relative z-10 flex items-center gap-3">
-                  <motion.div
-                    className="w-2 h-2 rounded-full bg-current"
-                    animate={{
-                      scale: !isOnProviderPage && view === "lista" ? [1, 1.2, 1] : 1,
-                      opacity: !isOnProviderPage && view === "lista" ? [0.8, 1, 0.8] : 0.6
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: !isOnProviderPage && view === "lista" ? Infinity : 0
-                    }}
+                  <div
+                    className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "lista" ? "opacity-100" : "opacity-40"
+                      }`}
                   />
                   <span className="hidden sm:inline">Lista</span>
                 </span>
@@ -379,16 +334,9 @@ function AppContent() {
                     transition={{ duration: 0.3 }}
                   />
                   <span className="relative z-10 flex items-center gap-3">
-                    <motion.div
-                      className="w-2 h-2 rounded-full bg-current"
-                      animate={{
-                        scale: view === "admin" ? [1, 1.2, 1] : 1,
-                        opacity: view === "admin" ? [0.8, 1, 0.8] : 0.6
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: view === "admin" ? Infinity : 0
-                      }}
+                    <div
+                      className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${view === "admin" ? "opacity-100" : "opacity-40"
+                        }`}
                     />
                     <span className="hidden sm:inline">Admin</span>
                   </span>
@@ -415,17 +363,7 @@ function AppContent() {
                   transition={{ duration: 0.3 }}
                 />
                 <span className="relative z-10 flex items-center gap-3">
-                  <motion.div
-                    className="w-2 h-2 rounded-full bg-current"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.6, 1, 0.6]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity
-                    }}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-current opacity-70" />
                   <span className="hidden sm:inline">Sair</span>
                 </span>
               </motion.button>

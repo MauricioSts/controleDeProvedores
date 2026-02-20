@@ -308,93 +308,29 @@ function ListaProvedores({ lista }) {
           className="mb-8 border-b-4 border-cyan-500 pb-2"
         >
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <motion.h2 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-              {"Lista de Provedores".split("").map((letter, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, y: 30, rotateY: -90 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    rotateY: 0,
-                    transition: {
-                      delay: 0.6 + (index * 0.08),
-                      duration: 0.6,
-                      ease: "easeOut"
-                    }
-                  }}
-                  whileHover={{
-                    y: -5,
-                    scale: 1.1,
-                    transition: { duration: 0.2 }
-                  }}
-                  className="inline-block cursor-default"
-                >
-                  {letter === " " ? "\u00A0" : letter}
-                </motion.span>
-              ))}
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
+              className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
+            >
+              Lista de Provedores
             </motion.h2>
 
             {/* Contador de Provedores */}
             {lista && lista.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  transition: {
-                    delay: 1.5,
-                    duration: 0.8,
-                    ease: "easeOut"
-                  }
-                }}
-                whileHover={{
-                  scale: 1.05,
-                  y: -2,
-                  boxShadow: "0 8px 25px rgba(6, 182, 212, 0.3)",
-                  transition: { duration: 0.3 }
-                }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 0.6, ease: "easeOut" }}
+                whileHover={{ scale: 1.05, y: -2, boxShadow: "0 8px 25px rgba(6, 182, 212, 0.3)", transition: { duration: 0.3 } }}
                 className="flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 px-4 py-2 rounded-xl border border-cyan-400/30 shadow-lg backdrop-blur-sm"
               >
-                <motion.div
-                  className="w-2 h-2 bg-cyan-400 rounded-full"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.6, 1, 0.6],
-                    transition: {
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }
-                  }}
-                />
-                <motion.span
-                  className="font-bold text-base"
-                  animate={{
-                    scale: [1, 1.05, 1],
-                    transition: {
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }
-                  }}
-                >
-                  {lista.length}
-                </motion.span>
-                <motion.span
-                  className="text-sm font-medium text-cyan-200"
-                  animate={{
-                    opacity: [0.7, 1, 0.7],
-                    transition: {
-                      duration: 2.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }
-                  }}
-                >
+                <div className="w-2 h-2 bg-cyan-400 rounded-full" />
+                <span className="font-bold text-base">{lista.length}</span>
+                <span className="text-sm font-medium text-cyan-200">
                   {lista.length === 1 ? 'provedor' : 'provedores'}
-                </motion.span>
+                </span>
               </motion.div>
             )}
           </div>
@@ -517,29 +453,26 @@ function ListaProvedores({ lista }) {
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowConfirmModal(true)}
               disabled={isGeneratingAll}
-              className="relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 
+              className="relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300
                          text-white shadow-2xl shadow-cyan-500/25 border border-cyan-400/30
                          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                          overflow-hidden group"
               style={{
                 background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)',
-                backgroundSize: '400% 400%',
-                animation: 'gradientShift 3s ease infinite'
+                backgroundSize: '200% 200%',
               }}
             >
-              {/* Gradiente animado em movimento */}
+              {/* Overlay de cor sólida (sem animação contínua) */}
               <div
                 className="absolute inset-0 opacity-90"
                 style={{
-                  background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)',
-                  backgroundSize: '400% 400%',
-                  animation: 'gradientShift 3s ease infinite'
+                  background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6)',
                 }}
-              ></div>
+              />
 
               {/* Efeito de brilho animado */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
-                             -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent
+                             -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
               {/* Conteúdo do botão */}
               <span className="relative z-10 flex items-center gap-3">
@@ -695,7 +628,7 @@ function ListaProvedores({ lista }) {
           // Callback quando a animação terminar
         }}
       />
-    </motion.div>
+    </motion.div >
   );
 }
 
