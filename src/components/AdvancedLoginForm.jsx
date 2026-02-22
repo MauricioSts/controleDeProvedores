@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useRememberedEmails } from '../hooks/useRememberedEmails';
@@ -35,15 +35,14 @@ const AdvancedLoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       await loginWithEmail(formData.email, formData.password);
-      
-      // Salvar email se o usuário marcou para lembrar
+
       if (rememberEmail) {
         saveEmail(formData.email);
       }
@@ -58,7 +57,7 @@ const AdvancedLoginForm = () => {
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -81,75 +80,25 @@ const AdvancedLoginForm = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4 }
-    }
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="w-full max-w-md mx-auto"
-    >
-      <motion.div
-        variants={itemVariants}
-        className="bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 overflow-hidden"
-      >
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 overflow-hidden">
         <form onSubmit={handleSubmit} className="p-8">
-          <motion.div
-            variants={itemVariants}
-            className="text-center mb-8"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                delay: 0.3,
-                type: "spring",
-                stiffness: 200,
-                damping: 15
-              }}
-              className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-2xl"
-            >
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-2xl">
               🔐
-            </motion.div>
+            </div>
             <h2 className="text-3xl font-bold text-white mb-2">Bem-vindo de volta!</h2>
             <p className="text-gray-300">Entre com suas credenciais</p>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVariants} className="space-y-6">
+          <div className="space-y-6">
             {/* Email Field */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Email
               </label>
-              <motion.div
-                className="relative"
-                whileFocus={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
+              <div className="relative">
                 <input
                   type="email"
                   name="email"
@@ -163,36 +112,22 @@ const AdvancedLoginForm = () => {
                     setFocusedField(null);
                     setTimeout(() => setShowEmailSuggestions(false), 200);
                   }}
-                  className={`w-full px-4 py-4 rounded-xl bg-gray-700/50 border text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
-                    errors.email 
-                      ? 'border-red-500 focus:ring-red-500/50' 
+                  className={`w-full px-4 py-4 rounded-xl bg-gray-700/50 border text-white placeholder-gray-400 focus:outline-none transition-all duration-200 ${errors.email
+                      ? 'border-red-500 ring-1 ring-red-500/50'
                       : focusedField === 'email'
-                      ? 'border-cyan-500 focus:ring-cyan-500/50'
-                      : 'border-gray-600 focus:ring-cyan-500/50'
-                  }`}
+                        ? 'border-cyan-500 ring-1 ring-cyan-500/50'
+                        : 'border-gray-600 hover:border-gray-500'
+                    }`}
                   placeholder="exemplo@gmail.com"
                   disabled={loading}
                 />
-                <motion.div
-                  className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 pointer-events-none"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ 
-                    opacity: focusedField === 'email' ? 1 : 0,
-                    scale: focusedField === 'email' ? 1 : 0.8
-                  }}
-                  transition={{ duration: 0.2 }}
-                />
-                <motion.div
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                  animate={{ 
-                    scale: focusedField === 'email' ? 1.2 : 1,
-                    opacity: focusedField === 'email' ? 1 : 0.5
-                  }}
-                  transition={{ duration: 0.2 }}
+                <span
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity duration-200 ${focusedField === 'email' ? 'opacity-100' : 'opacity-50'
+                    }`}
                 >
                   📧
-                </motion.div>
-              </motion.div>
+                </span>
+              </div>
 
               {/* Email Suggestions */}
               <AnimatePresence>
@@ -201,29 +136,28 @@ const AdvancedLoginForm = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
                     className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden"
                   >
-                    {rememberedEmails.map((email, index) => (
-                      <motion.button
+                    {rememberedEmails.map((email) => (
+                      <button
                         key={email}
                         type="button"
                         onClick={() => handleEmailSelect(email)}
-                        whileHover={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-500/10 transition-colors flex items-center justify-between"
                       >
                         <span>{email}</span>
-                        <motion.button
+                        <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             removeEmail(email);
                           }}
-                          whileHover={{ scale: 1.1 }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
+                          className="text-gray-500 hover:text-red-400 hover:scale-110 transition-all"
                         >
                           ✕
-                        </motion.button>
-                      </motion.button>
+                        </button>
+                      </button>
                     ))}
                   </motion.div>
                 )}
@@ -235,28 +169,21 @@ const AdvancedLoginForm = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
                     className="text-red-400 text-sm mt-2"
                   >
                     {errors.email}
                   </motion.p>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
 
             {/* Password Field */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
+            <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Senha
               </label>
-              <motion.div
-                className="relative"
-                whileFocus={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
+              <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
@@ -264,168 +191,93 @@ const AdvancedLoginForm = () => {
                   onChange={handleChange}
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
-                  className={`w-full px-4 py-4 pr-12 rounded-xl bg-gray-700/50 border text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
-                    errors.password 
-                      ? 'border-red-500 focus:ring-red-500/50' 
+                  className={`w-full px-4 py-4 pr-12 rounded-xl bg-gray-700/50 border text-white placeholder-gray-400 focus:outline-none transition-all duration-200 ${errors.password
+                      ? 'border-red-500 ring-1 ring-red-500/50'
                       : focusedField === 'password'
-                      ? 'border-cyan-500 focus:ring-cyan-500/50'
-                      : 'border-gray-600 focus:ring-cyan-500/50'
-                  }`}
+                        ? 'border-cyan-500 ring-1 ring-cyan-500/50'
+                        : 'border-gray-600 hover:border-gray-500'
+                    }`}
                   placeholder="Digite sua senha"
                   disabled={loading}
                 />
-                <motion.div
-                  className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 pointer-events-none"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ 
-                    opacity: focusedField === 'password' ? 1 : 0,
-                    scale: focusedField === 'password' ? 1 : 0.8
-                  }}
-                  transition={{ duration: 0.2 }}
-                />
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white hover:scale-110 active:scale-90 transition-all"
                 >
                   {showPassword ? '🙈' : '👁️'}
-                </motion.button>
-              </motion.div>
+                </button>
+              </div>
               <AnimatePresence>
                 {errors.password && (
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
                     className="text-red-400 text-sm mt-2"
                   >
                     {errors.password}
                   </motion.p>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
 
             {/* Remember Email Checkbox */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center gap-3"
-            >
-              <motion.button
+            <div className="flex items-center gap-3">
+              <button
                 type="button"
                 onClick={() => setRememberEmail(!rememberEmail)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                  rememberEmail 
-                    ? 'bg-cyan-500 border-cyan-500' 
+                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${rememberEmail
+                    ? 'bg-cyan-500 border-cyan-500'
                     : 'border-gray-500 hover:border-cyan-400'
-                }`}
+                  }`}
               >
                 {rememberEmail && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="text-white text-xs"
-                  >
-                    ✓
-                  </motion.span>
+                  <span className="text-white text-xs">✓</span>
                 )}
-              </motion.button>
-              <label 
+              </button>
+              <label
                 onClick={() => setRememberEmail(!rememberEmail)}
                 className="text-gray-300 text-sm cursor-pointer select-none"
               >
                 Lembrar meu email para login rápido
               </label>
-            </motion.div>
+            </div>
 
             {/* Login Button */}
-            <motion.button
+            <button
               type="submit"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              whileHover={{ 
-                scale: 1.05, 
-                y: -2,
-                boxShadow: "0 10px 25px rgba(6, 182, 212, 0.3)"
-              }}
-              whileTap={{ scale: 0.95 }}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
             >
-              {/* Shimmer Effect */}
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                initial={{ x: "-100%", skewX: "-20deg" }}
-                whileHover={{ x: "100%" }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-              />
-              
-              {/* Pulse Effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-xl"
-                animate={{
-                  scale: [1, 1.02, 1],
-                  opacity: [0, 0.5, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-
               {loading ? (
                 <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Entrando...</span>
                 </>
               ) : (
-                <>
-                  <span>Entrar</span>
-                  <motion.span
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    →
-                  </motion.span>
-                </>
+                <span>Entrar →</span>
               )}
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
 
           {/* Link para Cadastro */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center mt-6"
-          >
+          <div className="text-center mt-6">
             <p className="text-gray-400 text-sm">
               Não tem uma conta?{' '}
-              <motion.button
+              <button
                 type="button"
                 onClick={() => setAuthMode('register')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
               >
                 Criar Conta
-              </motion.button>
+              </button>
             </p>
-          </motion.div>
+          </div>
         </form>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

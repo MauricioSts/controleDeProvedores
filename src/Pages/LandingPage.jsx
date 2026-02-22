@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import AdvancedLoginForm from '../components/AdvancedLoginForm';
@@ -56,15 +56,22 @@ export default function LandingPage() {
         setAuthMode,
     } = useAuth();
 
+    const cardRef = useRef(null);
+
     const handleGoogleLogin = async () => {
         try {
             await loginWithGoogle();
         } catch (_) { }
     };
 
+    const handleConhecaPlataforma = () => {
+        setAuthMode('register');
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex overflow-hidden relative">
-            {/* Ambient orbs — estáticos, sem loop de animação */}
+            {/* Ambient orbs — estáticos, sem animação */}
             {[
                 { top: '10%', left: '5%', color: 'bg-cyan-500/10', size: 'w-72 h-72' },
                 { top: '60%', left: '30%', color: 'bg-blue-500/8', size: 'w-96 h-96' },
@@ -83,19 +90,17 @@ export default function LandingPage() {
       ══════════════════════════════════════ */}
             <div className="hidden lg:flex flex-col justify-center flex-1 px-12 xl:px-20 py-12 relative z-10">
 
-                {/* Logo */}
+                {/* Logo — sem animação infinita de rotação */}
                 <motion.div
                     initial={{ opacity: 0, x: -40 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8 }}
+                    transition={{ duration: 0.6 }}
                     className="flex items-center gap-4 mb-12"
                 >
-                    <motion.img
+                    <img
                         src="/bbicon.png"
                         alt="BridgeAndBits"
-                        className="h-14 w-14"
-                        animate={{ rotate: [0, 4, -4, 0], scale: [1, 1.05, 1] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                        className="h-14 w-14 hover:scale-105 transition-transform duration-300"
                     />
                     <div>
                         <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 leading-none">
@@ -109,27 +114,33 @@ export default function LandingPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.15 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
                     className="mb-8"
                 >
                     <h2 className="text-5xl xl:text-6xl font-extrabold text-white leading-tight mb-4">
-                        Controle total dos seus{' '}
+                        A gestão do seu{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                            provedores
+                            provedor de internet
                         </span>{' '}
-                        de internet.
+                        em um só lugar.
                     </h2>
-                    <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-                        Plataforma completa para gerenciar provedores de internet — relatórios, documentos,
-                        dados Anatel e envio automático de e-mails, tudo em um só sistema.
+                    <p className="text-gray-400 text-lg leading-relaxed max-w-xl mb-6">
+                        Simplifique sua operação. Centralize relatórios, gestão de documentos, dados da Anatel
+                        e automação de e-mails em uma plataforma única e completa.
                     </p>
+                    <button
+                        onClick={handleConhecaPlataforma}
+                        className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200"
+                    >
+                        Conheça a plataforma
+                    </button>
                 </motion.div>
 
                 {/* Stats */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.3 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
                     className="flex gap-4 mb-10"
                 >
                     {STATS.map((s, i) => (
@@ -143,55 +154,42 @@ export default function LandingPage() {
                     ))}
                 </motion.div>
 
-                {/* Feature Grid */}
+                {/* Feature Grid — divs nativos com CSS hover, sem motion */}
                 <div className="grid grid-cols-2 gap-3">
                     {FEATURES.map((f, i) => (
-                        <motion.div
+                        <div
                             key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.4 + i * 0.07 }}
-                            whileHover={{ y: -3, scale: 1.02 }}
-                            className="flex items-start gap-3 bg-gray-800/50 border border-gray-700/40 rounded-xl p-4 backdrop-blur-sm"
+                            className="flex items-start gap-3 bg-gray-800/50 border border-gray-700/40 rounded-xl p-4 backdrop-blur-sm hover:-translate-y-1 hover:scale-[1.02] transition-transform duration-200"
+                            style={{ animationDelay: `${i * 50}ms` }}
                         >
                             <span className="text-2xl mt-0.5 flex-shrink-0">{f.icon}</span>
                             <div>
                                 <h3 className="text-white font-semibold text-sm mb-0.5">{f.title}</h3>
                                 <p className="text-gray-400 text-xs leading-relaxed">{f.desc}</p>
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
 
                 {/* Bottom tag */}
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
-                    className="text-gray-600 text-xs mt-8"
-                >
+                <p className="text-gray-600 text-xs mt-8">
                     © 2026 BridgeAndBits · Conectando eficiência e resultados
-                </motion.p>
+                </p>
             </div>
 
             {/* ══════════════════════════════════════
           PAINEL DIREITO — Login Card
       ══════════════════════════════════════ */}
-            <div className="flex-1 lg:max-w-md xl:max-w-lg flex items-center justify-center p-6 relative z-10 lg:border-l lg:border-gray-800/60">
+            <div ref={cardRef} className="flex-1 lg:max-w-md xl:max-w-lg flex items-center justify-center p-6 relative z-10 lg:border-l lg:border-gray-800/60">
 
                 <motion.div
                     initial={{ opacity: 0, x: 40, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="w-full max-w-sm"
                 >
-                    {/* Mobile: logo compacta */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex lg:hidden items-center justify-center gap-3 mb-8"
-                    >
+                    {/* Mobile: logo compacta — sem motion wrapper */}
+                    <div className="flex lg:hidden items-center justify-center gap-3 mb-8">
                         <img src="/bbicon.png" alt="BridgeAndBits" className="h-10 w-10" />
                         <div>
                             <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
@@ -199,79 +197,57 @@ export default function LandingPage() {
                             </h1>
                             <p className="text-gray-400 text-xs">Gerenciador de Provedores</p>
                         </div>
-                    </motion.div>
+                    </div>
 
                     <div className="bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-8">
 
                         {/* Título do card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="mb-6 text-center"
-                        >
+                        <div className="mb-6 text-center">
                             <h2 className="text-2xl font-bold text-white">Acesse sua conta</h2>
                             <p className="text-gray-400 text-sm mt-1">
                                 Entre para gerenciar seus provedores
                             </p>
-                        </motion.div>
+                        </div>
 
                         {/* Aguardando autorização */}
                         {pendingAuthorization && userEmail && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl"
-                            >
+                            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                                        className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full"
-                                    />
+                                    <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
                                     <h3 className="text-yellow-400 font-semibold text-sm">Aguardando Autorização</h3>
                                 </div>
                                 <p className="text-yellow-300 text-xs">
                                     Sua conta <strong>{userEmail}</strong> está aguardando aprovação do administrador.
                                 </p>
-                                <motion.button
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
+                                <button
                                     onClick={logout}
-                                    className="mt-3 px-3 py-1.5 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg text-xs"
+                                    className="mt-3 px-3 py-1.5 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg text-xs hover:scale-[1.03] active:scale-[0.97] transition-transform"
                                 >
                                     Sair da Conta
-                                </motion.button>
-                            </motion.div>
+                                </button>
+                            </div>
                         )}
 
                         {/* Tabs */}
                         {!pendingAuthorization && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="flex bg-gray-700/40 rounded-xl p-1 mb-6"
-                            >
+                            <div className="flex bg-gray-700/40 rounded-xl p-1 mb-6">
                                 {[
                                     { key: 'login', label: 'Login' },
                                     { key: 'register', label: 'Cadastro' },
                                     { key: 'google', label: 'Google' },
                                 ].map((tab) => (
-                                    <motion.button
+                                    <button
                                         key={tab.key}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
                                         onClick={() => setAuthMode(tab.key)}
-                                        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${authMode === tab.key
+                                        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${authMode === tab.key
                                             ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
                                             : 'text-gray-300 hover:text-white'
                                             }`}
                                     >
                                         {tab.label}
-                                    </motion.button>
+                                    </button>
                                 ))}
-                            </motion.div>
+                            </div>
                         )}
 
                         {/* Formulários */}
@@ -282,7 +258,7 @@ export default function LandingPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.25 }}
+                                    transition={{ duration: 0.2 }}
                                 >
                                     <AdvancedLoginForm />
                                 </motion.div>
@@ -294,7 +270,7 @@ export default function LandingPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.25 }}
+                                    transition={{ duration: 0.2 }}
                                 >
                                     <AdvancedRegisterForm />
                                 </motion.div>
@@ -306,25 +282,13 @@ export default function LandingPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.25 }}
+                                    transition={{ duration: 0.2 }}
                                 >
-                                    <motion.button
-                                        whileHover={{
-                                            scale: 1.02,
-                                            boxShadow: '0 8px 28px rgba(6,182,212,0.25)',
-                                        }}
-                                        whileTap={{ scale: 0.97 }}
+                                    <button
                                         onClick={handleGoogleLogin}
                                         disabled={loading}
-                                        className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg relative overflow-hidden group border border-gray-200/30"
+                                        className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg relative overflow-hidden group border border-gray-200/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.97] transition-all duration-200"
                                     >
-                                        {/* Shimmer */}
-                                        <motion.div
-                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                                            initial={{ x: '-100%' }}
-                                            whileHover={{ x: '100%' }}
-                                            transition={{ duration: 0.7 }}
-                                        />
                                         {/* Google Icon */}
                                         <svg className="w-5 h-5 relative z-10" viewBox="0 0 24 24">
                                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -335,7 +299,7 @@ export default function LandingPage() {
                                         <span className="relative z-10">
                                             {loading ? 'Entrando...' : 'Entrar com Google'}
                                         </span>
-                                    </motion.button>
+                                    </button>
 
                                     <p className="text-center text-gray-500 text-xs mt-4">
                                         Acesso restrito a usuários autorizados.

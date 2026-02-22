@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AddProvedor from "./components/AddProvedor";
+import Dashboard from "./components/Dashboard";
 import ListaProvedores from "./Pages/ListaProvedores";
 import DetalheProvedor from "./Pages/DetalheProvedor";
 import LandingPage from "./Pages/LandingPage";
@@ -31,7 +32,9 @@ import "react-toastify/dist/ReactToastify.css";
 // Componente interno que usa o contexto de autenticação
 function AppContent() {
   const [provedores, setProvedores] = useState([]);
-  const [view, setView] = useState("add"); // "add", "lista" ou "admin"
+  // Returning user → "lista", first time → "dashboard"
+  const hasLoggedBefore = typeof window !== 'undefined' && localStorage.getItem('hasLoggedInBefore');
+  const [view, setView] = useState(hasLoggedBefore ? "lista" : "dashboard"); // "dashboard", "add", "lista" ou "admin"
   const { user, userId, loading, isAuthorized, userEmail, logout } = useAuth();
   const isAdmin = isAdminEmail(userEmail);
   const canViewAll = canViewAllProviders(userEmail);
@@ -54,6 +57,13 @@ function AppContent() {
       setView("lista");
     }
   }, [view, canViewAdmin]);
+
+  // Mark user as returning after first login
+  useEffect(() => {
+    if (user && userId) {
+      localStorage.setItem('hasLoggedInBefore', 'true');
+    }
+  }, [user, userId]);
   const provedoresRef = collection(db, "provedores");
 
   useEffect(() => {
@@ -256,25 +266,29 @@ function AppContent() {
 
             {/* Botões de navegação */}
             <div className="flex gap-4">
-              <motion.button
-                whileHover={{
-                  scale: 1.02,
-                  y: -1,
-                  boxShadow: "0 8px 32px rgba(6, 182, 212, 0.4)"
-                }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => goTo("add")}
-                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${!isOnProviderPage && view === "add"
+              <button
+                onClick={() => goTo("dashboard")}
+                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 overflow-hidden hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] ${!isOnProviderPage && view === "dashboard"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-xl shadow-cyan-500/30 border border-cyan-400/40"
                   : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-cyan-400/60 backdrop-blur-sm"
                   }`}
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
+                <span className="relative z-10 flex items-center gap-3">
+                  <div
+                    className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "dashboard" ? "opacity-100" : "opacity-40"
+                      }`}
+                  />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </span>
+              </button>
+
+              <button
+                onClick={() => goTo("add")}
+                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 overflow-hidden hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] ${!isOnProviderPage && view === "add"
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-xl shadow-cyan-500/30 border border-cyan-400/40"
+                  : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-cyan-400/60 backdrop-blur-sm"
+                  }`}
+              >
                 <span className="relative z-10 flex items-center gap-3">
                   <div
                     className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "add" ? "opacity-100" : "opacity-40"
@@ -282,27 +296,15 @@ function AppContent() {
                   />
                   <span className="hidden sm:inline">Adicionar</span>
                 </span>
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{
-                  scale: 1.02,
-                  y: -1,
-                  boxShadow: "0 8px 32px rgba(6, 182, 212, 0.4)"
-                }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={() => goTo("lista")}
-                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${!isOnProviderPage && view === "lista"
+                className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 overflow-hidden hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] ${!isOnProviderPage && view === "lista"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-xl shadow-cyan-500/30 border border-cyan-400/40"
                   : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-cyan-400/60 backdrop-blur-sm"
                   }`}
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
                 <span className="relative z-10 flex items-center gap-3">
                   <div
                     className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "lista" ? "opacity-100" : "opacity-40"
@@ -310,63 +312,39 @@ function AppContent() {
                   />
                   <span className="hidden sm:inline">Lista</span>
                 </span>
-              </motion.button>
+              </button>
 
               {/* Botão de administração - para admins */}
               {canViewAdmin && (
-                <motion.button
-                  whileHover={{
-                    scale: 1.02,
-                    y: -1,
-                    boxShadow: "0 8px 32px rgba(168, 85, 247, 0.4)"
-                  }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   onClick={() => goTo("admin")}
-                  className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden ${!isOnProviderPage && view === "admin"
+                  className={`relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 overflow-hidden hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] ${!isOnProviderPage && view === "admin"
                     ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl shadow-purple-500/30 border border-purple-400/40"
                     : "bg-gray-700/60 text-gray-200 hover:bg-gray-600/80 border border-gray-600/40 hover:border-purple-400/60 backdrop-blur-sm"
                     }`}
                 >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
                   <span className="relative z-10 flex items-center gap-3">
                     <div
-                      className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${view === "admin" ? "opacity-100" : "opacity-40"
+                      className={`w-2 h-2 rounded-full bg-current transition-opacity duration-300 ${!isOnProviderPage && view === "admin" ? "opacity-100" : "opacity-40"
                         }`}
                     />
                     <span className="hidden sm:inline">Admin</span>
                   </span>
-                </motion.button>
+                </button>
               )}
 
               {/* Botão de logout */}
-              <motion.button
-                whileHover={{
-                  scale: 1.02,
-                  y: -1,
-                  boxShadow: "0 8px 32px rgba(239, 68, 68, 0.4)"
-                }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={logout}
-                className="relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden
+                className="relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 overflow-hidden
                            bg-red-700/60 text-red-200 hover:bg-red-600/80 border border-red-600/40 
-                           hover:border-red-400/60 backdrop-blur-sm"
+                           hover:border-red-400/60 backdrop-blur-sm hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98]"
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-red-500/20"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
                 <span className="relative z-10 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-current opacity-70" />
                   <span className="hidden sm:inline">Sair</span>
                 </span>
-              </motion.button>
+              </button>
             </div>
           </motion.div>
         </div>
@@ -382,7 +360,17 @@ function AppContent() {
             path="/"
             element={
               <AnimatePresence mode="wait">
-                {view === "add" ? (
+                {view === "dashboard" ? (
+                  <motion.div
+                    key="dashboard"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Dashboard provedores={provedores} onNavigate={goTo} />
+                  </motion.div>
+                ) : view === "add" ? (
                   <motion.div
                     key="add"
                     initial={{ opacity: 0, x: -50 }}

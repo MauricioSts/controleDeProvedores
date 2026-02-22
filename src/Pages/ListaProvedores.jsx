@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import Provedores from "../components/Provedores";
 import ExplosionLoading from "../components/ExplosionLoading";
 import { useNavigate } from "react-router-dom";
@@ -277,73 +276,31 @@ function ListaProvedores({ lista }) {
   };
 
   return (
-    // Aplica o tema escuro ao container principal
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gray-900 text-white p-6 sm:p-10"
-    >
-      {/* REMOVIDO: max-w-4xl. O container agora usa a largura total (full-width) da tela. */}
-      {/* O padding horizontal (px-0 sm:px-4) é ajustado para manter um pequeno respiro nas laterais */}
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8"
-      >
-        {/* Título com animação de onda e contador */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, rotateX: -15 }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            rotateX: 0,
-            transition: {
-              duration: 1.2,
-              delay: 0.4,
-              ease: "easeOut"
-            }
-          }}
-          className="mb-8 border-b-4 border-cyan-500 pb-2"
-        >
+    <div className="min-h-screen bg-gray-900 text-white p-6 sm:p-10">
+      <div className="mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8">
+        {/* Título com contador */}
+        <div className="mb-8 border-b-4 border-cyan-500 pb-2">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-              className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
-            >
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
               Lista de Provedores
-            </motion.h2>
+            </h2>
 
             {/* Contador de Provedores */}
             {lista && lista.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.6, ease: "easeOut" }}
-                whileHover={{ scale: 1.05, y: -2, boxShadow: "0 8px 25px rgba(6, 182, 212, 0.3)", transition: { duration: 0.3 } }}
-                className="flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 px-4 py-2 rounded-xl border border-cyan-400/30 shadow-lg backdrop-blur-sm"
-              >
+              <div className="flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 px-4 py-2 rounded-xl border border-cyan-400/30 shadow-lg backdrop-blur-sm hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(6,182,212,0.3)] transition-all duration-200">
                 <div className="w-2 h-2 bg-cyan-400 rounded-full" />
                 <span className="font-bold text-base">{lista.length}</span>
                 <span className="text-sm font-medium text-cyan-200">
                   {lista.length === 1 ? 'provedor' : 'provedores'}
                 </span>
-              </motion.div>
+              </div>
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Input de Busca */}
         {lista && lista.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mb-6"
-          >
+          <div className="mb-6">
             <div className="relative max-w-md mx-auto">
               <input
                 type="text"
@@ -352,7 +309,7 @@ function ListaProvedores({ lista }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 pl-12 bg-gray-700 border border-gray-600 rounded-xl 
                            text-white placeholder-gray-400 focus:outline-none focus:ring-2 
-                           focus:ring-cyan-500 focus:border-transparent transition-all duration-300"
+                           focus:ring-cyan-500 focus:border-transparent transition-all duration-200"
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,24 +318,13 @@ function ListaProvedores({ lista }) {
                 </svg>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Botão Enviar Todos os Emails */}
         {lista && lista.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.55 }}
-            className="flex justify-center mb-4"
-          >
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                y: -2,
-                boxShadow: "0 15px 35px rgba(34, 197, 94, 0.4)"
-              }}
-              whileTap={{ scale: 0.95 }}
+          <div className="flex justify-center mb-4">
+            <button
               onClick={async () => {
                 setIsTestingEmails(true);
                 try {
@@ -386,7 +332,6 @@ function ListaProvedores({ lista }) {
                     autoClose: 4000
                   });
 
-                  // Busca provedores com switch ligado e envia emails
                   const result = await testEnvioAutomatico();
 
                   if (result.total === 0) {
@@ -410,19 +355,15 @@ function ListaProvedores({ lista }) {
                 }
               }}
               disabled={isTestingEmails}
-              className="relative px-8 py-4 rounded-xl font-semibold text-base transition-all duration-300 
+              className="relative px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 
                          bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-xl shadow-green-500/30 
                          border border-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed
-                         hover:from-green-400 hover:to-emerald-400"
+                         hover:from-green-400 hover:to-emerald-400 hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(34,197,94,0.4)] active:scale-95"
             >
               <span className="flex items-center gap-2">
                 {isTestingEmails ? (
                   <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Enviando emails...
                   </>
                 ) : (
@@ -432,44 +373,24 @@ function ListaProvedores({ lista }) {
                   </>
                 )}
               </span>
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         )}
 
-        {/* Botão F*ck All */}
+        {/* Botão Baixar Todos PDFs */}
         {lista && lista.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex justify-center mb-8"
-          >
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                y: -2,
-                boxShadow: "0 15px 35px rgba(6, 182, 212, 0.4)"
-              }}
-              whileTap={{ scale: 0.95 }}
+          <div className="flex justify-center mb-8">
+            <button
               onClick={() => setShowConfirmModal(true)}
               disabled={isGeneratingAll}
-              className="relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300
+              className="relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-200
                          text-white shadow-2xl shadow-cyan-500/25 border border-cyan-400/30
                          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-                         overflow-hidden group"
+                         overflow-hidden group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(6,182,212,0.4)] active:scale-95"
               style={{
-                background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)',
-                backgroundSize: '200% 200%',
+                background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6)',
               }}
             >
-              {/* Overlay de cor sólida (sem animação contínua) */}
-              <div
-                className="absolute inset-0 opacity-90"
-                style={{
-                  background: 'linear-gradient(-45deg, #06b6d4, #3b82f6, #8b5cf6)',
-                }}
-              />
-
               {/* Efeito de brilho animado */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent
                              -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -478,36 +399,21 @@ function ListaProvedores({ lista }) {
               <span className="relative z-10 flex items-center gap-3">
                 {isGeneratingAll ? (
                   <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Gerando PDFs...
                   </>
                 ) : (
                   '⬇️ Baixar Todos os PDFs'
                 )}
               </span>
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         )}
 
         {/* Modal de Confirmação */}
         {showConfirmModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 50 }}
-              transition={{ duration: 0.3 }}
-              className="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-700"
-            >
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-700">
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -520,74 +426,49 @@ function ListaProvedores({ lista }) {
                   Esta ação pode demorar alguns minutos. Deseja continuar?
                 </p>
                 <div className="flex gap-4 justify-center">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => setShowConfirmModal(false)}
-                    className="px-6 py-3 text-gray-300 bg-gray-700 rounded-xl hover:bg-gray-600 transition font-medium"
+                    className="px-6 py-3 text-gray-300 bg-gray-700 rounded-xl hover:bg-gray-600 hover:scale-105 active:scale-95 transition-all font-medium"
                   >
                     Cancelar
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  </button>
+                  <button
                     onClick={confirmGenerateAllPDFs}
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl hover:from-cyan-400 hover:to-blue-400 transition font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl hover:from-cyan-400 hover:to-blue-400 hover:scale-105 active:scale-95 transition-all font-medium"
                   >
                     Confirmar Download
-                  </motion.button>
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
 
         {lista && lista.length > 0 ? (
           <>
-            {/* Cards com animação baseada na busca */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-            >
-              {filteredProvedores.length > 0 ? (
-                <Provedores
-                  listaProvedores={filteredProvedores}
-                  onCardClick={handleCardClick}
-                  searchTerm={searchTerm}
-                />
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center py-12"
-                >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <p className="text-xl text-gray-400 font-medium mb-2">Nenhum provedor encontrado</p>
-                  <p className="text-sm text-gray-600">
-                    Tente buscar por outro termo ou limpe o filtro
-                  </p>
-                </motion.div>
-              )}
-            </motion.div>
+            {filteredProvedores.length > 0 ? (
+              <Provedores
+                listaProvedores={filteredProvedores}
+                onCardClick={handleCardClick}
+                searchTerm={searchTerm}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="text-xl text-gray-400 font-medium mb-2">Nenhum provedor encontrado</p>
+                <p className="text-sm text-gray-600">
+                  Tente buscar por outro termo ou limpe o filtro
+                </p>
+              </div>
+            )}
           </>
         ) : (
-          // Mensagem para quando não há provedores (mantido)
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="text-center py-12"
-          >
-            <motion.svg
-              initial={{ rotate: -180, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
+          <div className="text-center py-12">
+            <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-16 w-16 mx-auto mb-4 text-cyan-500 opacity-75"
               fill="none"
@@ -600,26 +481,16 @@ function ListaProvedores({ lista }) {
                 strokeWidth={2}
                 d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
-            </motion.svg>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1.0 }}
-              className="text-xl text-gray-400 font-medium"
-            >
+            </svg>
+            <p className="text-xl text-gray-400 font-medium">
               Nenhum provedor cadastrado no momento.
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1.2 }}
-              className="text-sm text-gray-600 mt-2"
-            >
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
               Adicione um novo provedor para começar.
-            </motion.p>
-          </motion.div>
+            </p>
+          </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Loading de Explosão */}
       <ExplosionLoading
@@ -628,7 +499,7 @@ function ListaProvedores({ lista }) {
           // Callback quando a animação terminar
         }}
       />
-    </motion.div >
+    </div>
   );
 }
 
