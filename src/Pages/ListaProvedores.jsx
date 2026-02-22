@@ -321,9 +321,9 @@ function ListaProvedores({ lista }) {
           </div>
         )}
 
-        {/* Botão Enviar Todos os Emails */}
+        {/* Botões de ação: Enviar Emails + Baixar PDFs */}
         {lista && lista.length > 0 && (
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center gap-4 mb-8 flex-wrap">
             <button
               onClick={async () => {
                 setIsTestingEmails(true);
@@ -374,12 +374,8 @@ function ListaProvedores({ lista }) {
                 )}
               </span>
             </button>
-          </div>
-        )}
 
-        {/* Botão Baixar Todos PDFs */}
-        {lista && lista.length > 0 && (
-          <div className="flex justify-center mb-8">
+            {/* Botão Baixar Todos PDFs */}
             <button
               onClick={() => setShowConfirmModal(true)}
               disabled={isGeneratingAll}
